@@ -65,7 +65,7 @@ struct KeysValue {
 char* DeleteSpace(char* str, int* n, bool flag){
     int j = 0;
     for (int i = 0; i < *n; i++) {
-        if (str[i] == '\n' && str[i + 1] == '\n'){
+        if (flag == true && str[i] == '\n' && str[i + 1] == '\n'){
             continue;
         }
         if (str[i] != ' ') {
