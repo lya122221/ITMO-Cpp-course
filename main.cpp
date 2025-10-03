@@ -65,6 +65,9 @@ struct KeysValue {
 char* DeleteSpace(char* str, int* n, bool flag){
     int j = 0;
     for (int i = 0; i < *n; i++) {
+        if (str[i] == '\n' && str[i + 1] == '\n'){
+            continue;
+        }
         if (str[i] != ' ') {
             str[j] = str[i];
             j++;
@@ -87,7 +90,7 @@ char* DeleteSpace(char* str, int* n, bool flag){
     return str;
 }
 
-void replacePart(char* str, size_t pos, size_t len, char* replacement) {
+void ReplacePart(char* str, size_t pos, size_t len, char* replacement) {
     size_t str_len = std::strlen(str);
     size_t rep_len = std::strlen(replacement);
 
@@ -163,7 +166,7 @@ KeysValue DataProcessing(char* data_path){
 
     char* tmp = DeleteSpace(data, &symbol_count, true);
     if (tmp == nullptr) {
-        return {nullptr, nullptr, false};
+        return {nullptr, nullptr, 0};
     }
     data = tmp;
 
@@ -246,6 +249,7 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
         }
         symbol_count += curr;
     }
+    fclose(template_in);
     char* new_tmp = new char[symbol_count];
     std::memcpy(new_tmp, tmp, symbol_count);
     delete[] tmp;
@@ -293,7 +297,7 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
 
                     int old_len = end - start + 1;
                     const char* replacement = kv.value[curr_key_index];
-                    replacePart(tmp, start, old_len, const_cast<char*>(replacement));
+                    ReplacePart(tmp, start, old_len, const_cast<char*>(replacement));
 
                     int rep_len = std::strlen(replacement);
                     symbol_count = symbol_count - old_len + rep_len;
@@ -310,9 +314,7 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
         if (file == nullptr) {
             return 3;
         }
-        for (int i = 0; i < symbol_count; i++){
-            fwrite(tmp + i, sizeof(char), 1, file);
-        }
+        fwrite(tmp, sizeof(char), symbol_count, file);
         fclose(file);
     } else {
         for (int i = 0; i < symbol_count; i++){
