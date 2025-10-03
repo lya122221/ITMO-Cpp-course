@@ -282,7 +282,6 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
                     for (int k = 0; k < kv.keys_count; k++) {
                         if (strcmp(kv.keys[k], curr_key) == 0) {
                             curr_key_index = k;
-                            break;
                         }
                     }
                     delete[] curr_key;
@@ -311,7 +310,9 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
         if (file == nullptr) {
             return 3;
         }
-        fwrite(tmp, sizeof(char), symbol_count, file);
+        for (int i = 0; i < symbol_count; i++){
+            fwrite(tmp + i, sizeof(char), 1, file);
+        }
         fclose(file);
     } else {
         for (int i = 0; i < symbol_count; i++){
