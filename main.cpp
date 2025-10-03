@@ -18,8 +18,7 @@ struct Param {
 };
 
 Param Parser(int argc, char* argv[]) {
-    Param res;
-    res.error = true;
+    Param res = {nullptr, nullptr, nullptr, true};
     for (int i = 1; i < argc; i++) {
         char* str = argv[i];
 
@@ -70,7 +69,7 @@ char* DeleteSpace(char* str, int* n, bool flag){
             str[j] = str[i];
             j++;
         } else if (i != 0 && i != *n - 1){
-            if (str[i - 1] != ' ' && str[i + 1] != ' '){
+            if (str[i - 1] != ' ' && str[i + 1] != ' ' && str[i + 1] != '\n' && str[i - 1] != '\n'){
                 if (flag == false){
                     str[j] = str[i];
                     j++;
@@ -78,6 +77,9 @@ char* DeleteSpace(char* str, int* n, bool flag){
                     return nullptr;
                 }
             }
+        }
+        if (flag == true && str[i] == '-' && i != 0 && i != *n - 1 && str[i - 1] != ' ' && str[i - 1] != '=' && str[i - 1] != '\n' && str[i + 1] != ' ' && str[i + 1] != '=' && str[i + 1] != '\n'){
+            return nullptr;
         }
     }
     *n = j;
@@ -161,7 +163,7 @@ KeysValue DataProcessing(char* data_path){
 
     char* tmp = DeleteSpace(data, &symbol_count, true);
     if (tmp == nullptr) {
-        return res;
+        return {nullptr, nullptr, false};
     }
     data = tmp;
 
@@ -221,7 +223,7 @@ KeysValue DataProcessing(char* data_path){
 
 }
 
-void TemplateProcessing(KeysValue kv, char* template_path){
+int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
 
     FILE* template_in = fopen(template_path, "r");
 
@@ -253,11 +255,14 @@ void TemplateProcessing(KeysValue kv, char* template_path){
     int end;
     for (int i = 0; i < symbol_count - 1; i++) {
         if (tmp[i] == '{' && tmp[i + 1] == '{') {
-            int start = i;
-            int end = -1;
-            for (int j = i + 2; j < symbol_count - 1; j++) {
-                if ((tmp[j] == '{' && tmp[j + 1] == '{') /) {
-                    return;
+            start = i;
+            end = -1;
+            for (int j = i + 2; j < symbol_count; j++) {
+                if ((tmp[j] == '{' && tmp[j + 1] == '{') || (j == symbol_count - 1)) {
+                    return 4;
+                }
+                if (j == symbol_count - 1){
+                    break;
                 }
                 if (tmp[j] == '}' && tmp[j + 1] == '}') {
                     end = j + 1;
@@ -269,8 +274,7 @@ void TemplateProcessing(KeysValue kv, char* template_path){
                     int p = key_length;
                     char* temp = DeleteSpace(curr_key, &p, false);
                     if (temp == nullptr) {
-                        delete[] curr_key;
-                        return;
+                        return 4;
                     }
                     curr_key = temp;
 
@@ -302,14 +306,19 @@ void TemplateProcessing(KeysValue kv, char* template_path){
             }
         }
     }
-
-
-
-
-    for (int i = 0; i < symbol_count; i++){
-        std::cout << tmp[i];
+    if (output_path != nullptr) {
+        FILE* file = fopen(output_path, "w");
+        if (file == nullptr) {
+            return 3;
+        }
+        fwrite(tmp, sizeof(char), symbol_count, file);
+        fclose(file);
+    } else {
+        for (int i = 0; i < symbol_count; i++){
+            std::cout << tmp[i];
+        }
     }
-
+    return 0;
 }
 
 int main(int argc, char* argv[]) {
@@ -324,9 +333,14 @@ int main(int argc, char* argv[]) {
         std::cout << "Error in data file" << std::endl;
         return 5;
     }
-
-    TemplateProcessing(kv, parameters.template_path);
-
-
+    int err = TemplateProcessing(kv, parameters.template_path, parameters.output_path);
+    switch (err) {
+        case 4:
+            std::cout << "Error in template file" << std::endl;
+            return 4;
+        case 3:
+            std::cout << "Error in opening file" << std::endl;
+            return 3;
+    }
     return 0;
 }
