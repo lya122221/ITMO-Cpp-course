@@ -66,7 +66,6 @@ char* DeleteSpace(char* str, int* n){
     int j = 0;
     for (int i = 0; i < *n; i++) {
         if (str[i] == '\n' && str[i + 1] == '\n'){
-            i++;
             continue;
         }
         if (str[i] != ' ') {
@@ -260,40 +259,46 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
         if (tmp[i] == '{' && tmp[i + 1] == '{') {
             start_scb = i;
             i += 2;
-            while(tmp[i] == ' '){
+            while (i < symbol_count && tmp[i] == ' ') {
                 i++;
             }
             start = i;
             int flag = 0;
-            while(tmp[i] != '}' || tmp[i + 1] != '}'){
-                if (tmp[i] == ' ' && flag == 0){
+            end = 0;
+            while (i + 1 < symbol_count && !(tmp[i] == '}' && tmp[i + 1] == '}')) {
+                if (tmp[i] == ' ' && flag == 0) {
                     flag = 1;
                     end = i - 1;
                 }
                 i++;
-                if (i > symbol_count){
-                    return 4;
-                }
             }
-            if (end == 0){
+            if (i + 1 >= symbol_count) {
+                return 4;
+            }
+            if (end == 0) {
                 end = i - 1;
             }
             end_scb = i + 1;
+
             char* curr_key = new char[end - start + 2];
             std::memcpy(curr_key, tmp + start, end - start + 1);
             curr_key[end - start + 1] = '\0';
-
 
             int curr_key_index = -1;
             for (int k = 0; k < kv.keys_count; k++) {
                 if (strcmp(kv.keys[k], curr_key) == 0) {
                     curr_key_index = k;
+                    break;
                 }
             }
+            delete[] curr_key;
+
             if (curr_key_index == -1) {
                 return 4;
             }
+
             int old_len = end_scb - start_scb + 1;
+
             char* replacement = kv.value[curr_key_index];
             ReplacePart(tmp, start_scb, old_len, replacement);
             int rep_len = std::strlen(replacement);
@@ -325,6 +330,9 @@ int main(int argc, char* argv[]) {
     }
     std::cout << parameters.template_path << " " << parameters.data_path << std::endl;
     KeysValue kv = DataProcessing(parameters.data_path);
+    for (int i = 0; i < kv.keys_count; i++){
+        std::cout << kv.keys[i] << " " << kv.value[i] << std::endl;
+    }
     if (kv.keys == nullptr || kv.value == nullptr) {
         std::cout << "Error in data file" << std::endl;
         return 5;
