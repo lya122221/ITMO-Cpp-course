@@ -62,10 +62,11 @@ struct KeysValue {
     int keys_count;
 };
 
-char* DeleteSpace(char* str, int* n, bool flag){
+char* DeleteSpace(char* str, int* n){
     int j = 0;
     for (int i = 0; i < *n; i++) {
-        if (flag == true && str[i] == '\n' && str[i + 1] == '\n'){
+        if (str[i] == '\n' && str[i + 1] == '\n'){
+            i++;
             continue;
         }
         if (str[i] != ' ') {
@@ -73,15 +74,12 @@ char* DeleteSpace(char* str, int* n, bool flag){
             j++;
         } else if (i != 0 && i != *n - 1){
             if (str[i - 1] != ' ' && str[i + 1] != ' ' && str[i + 1] != '\n' && str[i - 1] != '\n'){
-                if (flag == false){
-                    str[j] = str[i];
-                    j++;
-                } else if (str[i + 1] != '=' && str[i - 1] != '=') {
+                if (str[i + 1] != '=' && str[i - 1] != '=') {
                     return nullptr;
                 }
             }
         }
-        if (flag == true && str[i] == '-' && i != 0 && i != *n - 1 && str[i - 1] != ' ' && str[i - 1] != '=' && str[i - 1] != '\n' && str[i + 1] != ' ' && str[i + 1] != '=' && str[i + 1] != '\n'){
+        if (str[i] == '-' && i != 0 && i != *n - 1 && str[i - 1] != ' ' && str[i - 1] != '=' && str[i - 1] != '\n' && str[i + 1] != ' ' && str[i + 1] != '=' && str[i + 1] != '\n'){
             return nullptr;
         }
     }
@@ -116,7 +114,6 @@ void ReplacePart(char* str, size_t pos, size_t len, char* replacement) {
 KeysValue DataProcessing(char* data_path){
     KeysValue res; 
     FILE* data_in = fopen(data_path, "r");
-
     char* data = new char[256];
     int block_size = 256;
     int total_size = 256;
@@ -140,6 +137,8 @@ KeysValue DataProcessing(char* data_path){
     std::memcpy(new_data, data, symbol_count);
     delete[] data;
     data = new_data;
+    fclose(data_in);
+
 
     int curr_comment = 0;
     for (int i = 0; i < symbol_count; i++){
@@ -164,7 +163,7 @@ KeysValue DataProcessing(char* data_path){
         }
     }
 
-    char* tmp = DeleteSpace(data, &symbol_count, true);
+    char* tmp = DeleteSpace(data, &symbol_count);
     if (tmp == nullptr) {
         return {nullptr, nullptr, 0};
     }
@@ -226,10 +225,9 @@ KeysValue DataProcessing(char* data_path){
 
 }
 
+
 int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
-
     FILE* template_in = fopen(template_path, "r");
-
     char* tmp = new char[256];
     int block_size = 256;
     int total_size = 256;
@@ -254,59 +252,54 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
     std::memcpy(new_tmp, tmp, symbol_count);
     delete[] tmp;
     tmp = new_tmp;
-
-    int start;
-    int end;
     for (int i = 0; i < symbol_count - 1; i++) {
+        int start = 0;
+        int end = 0;
+        int start_scb = 0;
+        int end_scb = 0;
         if (tmp[i] == '{' && tmp[i + 1] == '{') {
+            start_scb = i;
+            i += 2;
+            while(tmp[i] == ' '){
+                i++;
+            }
             start = i;
-            end = -1;
-            for (int j = i + 2; j < symbol_count; j++) {
-                if ((tmp[j] == '{' && tmp[j + 1] == '{') || (j == symbol_count - 1)) {
+            int flag = 0;
+            while(tmp[i] != '}' || tmp[i + 1] != '}'){
+                if (tmp[i] == ' ' && flag == 0){
+                    flag = 1;
+                    end = i - 1;
+                }
+                i++;
+                if (i > symbol_count){
                     return 4;
                 }
-                if (j == symbol_count - 1){
-                    break;
-                }
-                if (tmp[j] == '}' && tmp[j + 1] == '}') {
-                    end = j + 1;
-                    int key_length = end - start - 3;
-                    char* curr_key = new char[key_length + 1];
-                    std::memcpy(curr_key, tmp + start + 2, key_length);
-                    curr_key[key_length] = '\0';
+            }
+            if (end == 0){
+                end = i - 1;
+            }
+            end_scb = i + 1;
+            char* curr_key = new char[end - start + 2];
+            std::memcpy(curr_key, tmp + start, end - start + 1);
+            curr_key[end - start + 1] = '\0';
 
-                    int p = key_length;
-                    char* temp = DeleteSpace(curr_key, &p, false);
-                    if (temp == nullptr) {
-                        return 4;
-                    }
-                    curr_key = temp;
 
-                    int curr_key_index = -1;
-                    for (int k = 0; k < kv.keys_count; k++) {
-                        if (strcmp(kv.keys[k], curr_key) == 0) {
-                            curr_key_index = k;
-                        }
-                    }
-                    delete[] curr_key;
-
-                    if (curr_key_index == -1) {
-                        i = end;
-                        break;
-                    }
-
-                    int old_len = end - start + 1;
-                    const char* replacement = kv.value[curr_key_index];
-                    ReplacePart(tmp, start, old_len, const_cast<char*>(replacement));
-
-                    int rep_len = std::strlen(replacement);
-                    symbol_count = symbol_count - old_len + rep_len;
-
-                    i = start + rep_len - 1;
-
-                    break;
+            int curr_key_index = -1;
+            for (int k = 0; k < kv.keys_count; k++) {
+                if (strcmp(kv.keys[k], curr_key) == 0) {
+                    curr_key_index = k;
                 }
             }
+            if (curr_key_index == -1) {
+                return 4;
+            }
+            int old_len = end_scb - start_scb + 1;
+            char* replacement = kv.value[curr_key_index];
+            ReplacePart(tmp, start_scb, old_len, replacement);
+            int rep_len = std::strlen(replacement);
+            symbol_count = symbol_count - old_len + rep_len;
+
+            i = start_scb + rep_len - 1;
         }
     }
     if (output_path != nullptr) {
@@ -314,7 +307,7 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
         if (file == nullptr) {
             return 3;
         }
-        fwrite(tmp, sizeof(char), symbol_count, file);
+        fwrite(tmp, 1, symbol_count, file);
         fclose(file);
     } else {
         for (int i = 0; i < symbol_count; i++){
@@ -325,12 +318,12 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path){
 }
 
 int main(int argc, char* argv[]) {
-    
     Param parameters = Parser(argc, argv);
     if (parameters.template_path == nullptr || parameters.data_path == nullptr || parameters.error == false) {
         std::cout << "Error in arguments" << std::endl;
         return 2;
     }
+    std::cout << parameters.template_path << " " << parameters.data_path << std::endl;
     KeysValue kv = DataProcessing(parameters.data_path);
     if (kv.keys == nullptr || kv.value == nullptr) {
         std::cout << "Error in data file" << std::endl;
