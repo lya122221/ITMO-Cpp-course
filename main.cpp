@@ -294,22 +294,22 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path) {
     tmp[symbol_count] = '\0';
 
     for (int i = 0; i < symbol_count - 1; i++) {
-        int start = 0;
-        int end = 0;
-        int start_scb = 0;
-        int end_scb = 0;
         if (tmp[i] == '{' && tmp[i + 1] == '{') {
-            start_scb = i;
+            int start_scb = i;
             i += 2;
             while (i < symbol_count && tmp[i] == ' ') {
                 i++;
             }
-            start = i;
-            int flag = 0;
-            end = 0;
-            while (i + 1 < symbol_count && !(tmp[i] == '}' && tmp[i + 1] == '}')) {
-                if (tmp[i] == ' ' && flag == 0) {
-                    flag = 1;
+            int start = i;
+            int end = -1;
+            while (i + 1 < symbol_count) {
+                if (tmp[i] == '}' && tmp[i + 1] == '}') {
+                    if (end == -1) {
+                        end = i - 1;
+                    }
+                    break;
+                }
+                if (tmp[i] == ' ' && end == -1) {
                     end = i - 1;
                 }
                 i++;
@@ -318,10 +318,10 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path) {
                 delete[] tmp;
                 return 4;
             }
-            if (end == 0) {
+            if (end == -1) {
                 end = i - 1;
             }
-            end_scb = i + 1;
+            int end_scb = i + 1;
 
             int key_len = end - start + 1;
             if (key_len <= 0) {
@@ -347,17 +347,44 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path) {
             }
 
             int old_len = end_scb - start_scb + 1;
-            char* replacement = kv.value[curr_key_index];
+            const char* replacement = kv.value[curr_key_index];
             size_t rep_len = std::strlen(replacement);
 
+            if (rep_len > old_len) {
+                if (symbol_count + (rep_len - old_len) + 1 > total_size) {
+                    int new_total = total_size;
+                    while (new_total < symbol_count + (rep_len - old_len) + 1) {
+                        new_total *= 2;
+                    }
+                    char* new_tmp = new char[new_total];
+                    std::memcpy(new_tmp, tmp, start_scb);
+                    std::memcpy(new_tmp + start_scb + rep_len, tmp + start_scb + old_len, symbol_count - (start_scb + old_len));
+                    delete[] tmp;
+                    tmp = new_tmp;
+                    total_size = new_total;
+                } else {
+                    for (int idx = symbol_count; idx >= start_scb + old_len; --idx) {
+                        tmp[idx + rep_len - old_len] = tmp[idx];
+                    }
+                }
+            } else if (rep_len < old_len) {
+                for (int idx = start_scb + old_len; idx <= symbol_count; ++idx) {
+                    tmp[idx - (old_len - rep_len)] = tmp[idx];
+                }
+            }
 
-            ReplacePart(tmp, start_scb, old_len, replacement);
+            for (size_t idx = 0; idx < rep_len; ++idx) {
+                tmp[start_scb + idx] = replacement[idx];
+            }
 
             symbol_count = symbol_count - old_len + static_cast<int>(rep_len);
+            tmp[symbol_count] = '\0';
 
             i = start_scb + static_cast<int>(rep_len) - 1;
         }
     }
+
+
     if (output_path != nullptr) {
         FILE* file = fopen(output_path, "w");
         if (file == nullptr) {
@@ -367,14 +394,13 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path) {
         fwrite(tmp, 1, symbol_count, file);
         fclose(file);
     } else {
-        for (int i = 0; i < symbol_count; i++) {
-            std::cout << tmp[i];
-        }
+        std::cout.write(tmp, symbol_count);
     }
     delete[] tmp;
 
     return 0;
 }
+
 
 
 int main(int argc, char* argv[]) {
