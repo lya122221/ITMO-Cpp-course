@@ -337,7 +337,6 @@ int TemplateProcessing(KeysValue kv, char* template_path, char* output_path) {
             for (int k = 0; k < kv.keys_count; k++) {
                 if (strcmp(kv.keys[k], curr_key) == 0) {
                     curr_key_index = k;
-                    break;
                 }
             }
             delete[] curr_key;
@@ -384,14 +383,10 @@ int main(int argc, char* argv[]) {
         std::cout << "Error in arguments" << std::endl;
         return 2;
     }
-    std::cout << parameters.template_path << " " << parameters.data_path << std::endl;
     KeysValue kv = DataProcessing(parameters.data_path);
     if (kv.keys == nullptr || kv.value == nullptr || kv.keys_count == 0) {
         std::cout << "Error in data file" << std::endl;
         return 5;
-    }
-    for (int i = 0; i < kv.keys_count; i++) {
-        std::cout << kv.keys[i] << " " << kv.value[i] << std::endl;
     }
 
     int err = TemplateProcessing(kv, parameters.template_path, parameters.output_path);
@@ -403,7 +398,6 @@ int main(int argc, char* argv[]) {
         std::cout << "Error in opening file" << std::endl;
         return 3;
     }
-
 
     for (int i = 0; i < kv.keys_count; i++) {
         delete[] kv.keys[i];
