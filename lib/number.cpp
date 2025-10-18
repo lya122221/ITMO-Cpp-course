@@ -25,7 +25,6 @@ bool Large(const int2025_t& lhs, const int2025_t& rhs){
     return false;
 }
 
-
 int2025_t Overflow(int2025_t num){
     num.bin_int[0] &= 129;
     int sign = num.bin_int[0] & 128;
@@ -125,7 +124,6 @@ int2025_t MultiplyInt(const int2025_t &a, const int2025_t &b) {
     return result;
 }
 
-
 int2025_t from_int(int32_t i) {
     int2025_t num;
     int64_t n = i;
@@ -138,9 +136,12 @@ int2025_t from_int(int32_t i) {
         sign = true;
     }
 
-    for(int j = 0; j < ((int)log2(n))/8 + 1; j++){
-        num.bin_int[253 - j] = (n >> 8*j) & 255;
+    if (n != 0){
+        for(int j = 0; j < ((int)log2(n))/8 + 1; j++){
+            num.bin_int[253 - j] = (n >> 8*j) & 255;
+        }
     }
+
     if (sign){
         if ((int)num.bin_int[0] == 1){
             num.bin_int[0] = 129;
@@ -152,11 +153,10 @@ int2025_t from_int(int32_t i) {
     return num;
 }
 
-
 int2025_t from_string(const char* buff) {
     int2025_t res;
     int2025_t pow10;
-    int sign;
+    int sign = 0;
     if (buff[0] == '+'){
         buff++;
     }
@@ -191,11 +191,11 @@ int2025_t from_string(const char* buff) {
 
 int2025_t SumOfAbs(const int2025_t& lhs, const int2025_t& rhs){
     int2025_t res;
-    for(int i = 0; i < 254; i++){
+    for(int i = 0; i < kBytes; i++){
         res.bin_int[i] = 0;
     }
     int rem = 0;
-    int curr_sum;
+    int curr_sum = 0;
     for(int i = 253; i >= 0; i--){
         curr_sum = rem + lhs.bin_int[i] + rhs.bin_int[i];
         rem = 0;
@@ -210,13 +210,13 @@ int2025_t SumOfAbs(const int2025_t& lhs, const int2025_t& rhs){
 
 int2025_t DifOfAbs(const int2025_t& l, const int2025_t& r){
     int2025_t res;
-    for(int i = 0; i < 254; i++){
+    for(int i = 0; i < kBytes; i++){
         res.bin_int[i] = 0;
     }
     int2025_t lhs = l;
     int2025_t rhs = r;
 
-    int curr_dif;
+    int curr_dif = 0;
     for(int i = 253; i >= 0; i--){
         curr_dif = lhs.bin_int[i] - rhs.bin_int[i];
         int k = i - 1;
@@ -224,6 +224,9 @@ int2025_t DifOfAbs(const int2025_t& l, const int2025_t& r){
             while(lhs.bin_int[k] == 0){
                 lhs.bin_int[k] = 255;
                 k--;
+            }
+            if(k < 0){
+                break;
             }
             lhs.bin_int[k]--;
             curr_dif += 256;
@@ -361,7 +364,6 @@ int2025_t operator*(const int2025_t& lhs, const int2025_t& rhs) {
     return Overflow(res);
 }
 
-
 int2025_t operator/(const int2025_t& lhs, const int2025_t& rhs) {
     if (lhs == from_int(0) || rhs == from_int(0)){
         return from_int(0);
@@ -400,8 +402,6 @@ int2025_t operator/(const int2025_t& lhs, const int2025_t& rhs) {
     return Overflow(x);
 }
 
-
-
 bool operator==(const int2025_t& lhs, const int2025_t& rhs) {
     for (int i = 0; i < kBytes; i++){
         if(lhs.bin_int[i] != rhs.bin_int[i]){
@@ -425,6 +425,6 @@ std::ostream& operator<<(std::ostream& stream, const int2025_t& value) {
     for(int i = 0; i < std::strlen(str); i++){
         stream << str[i];
     }
-
+    free(str);
     return stream;
 }
