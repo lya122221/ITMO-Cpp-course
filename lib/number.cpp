@@ -157,29 +157,29 @@ int2025_t from_string(const char* buff) {
     int2025_t res;
     int2025_t pow10;
     int sign = 0;
-    if (buff[0] == '+'){
+
+    if (buff[0] == '+') {
         buff++;
     }
-    if (buff[0] == '-'){
+    if (buff[0] == '-') {
         sign = 128;
         buff++;
-    } else {
-        sign = 0;
     }
 
     for(int i = 0; i < kBytes; i++){
         res.bin_int[i] = 0;
         pow10.bin_int[i] = 0;
     }
-    pow10.bin_int[253] = 1;
+    pow10.bin_int[kBytes - 1] = 1;
 
     int len = std::strlen(buff);
-    char curr;
     for(int i = len - 1; i >= 0; i--){
-        curr = buff[i];
-        res = res + (from_int(curr - '0') * pow10);
+        int digit = buff[i] - '0';
+        int2025_t tmp = from_int(digit);
+        res = res + (tmp * pow10);
         pow10 = pow10 * from_int(10);
     }
+
     if(sign == 128) {
         res.bin_int[0] |= 128;
     } else {
@@ -247,39 +247,34 @@ int Rem10(int2025_t& num) {
     return rem;
 }
 
-char* IntToStr(int2025_t num){
-    if (CheckZero(num) && ((num.bin_int[0] & 127) == 0)){
+char* IntToStr(int2025_t num) {
+    if (CheckZero(num) && ((num.bin_int[0] & 127) == 0)) {
         char* zero = (char*)malloc(2);
         zero[0] = '0';
         zero[1] = '\0';
-        
         return zero;
     }
 
     int sign = num.bin_int[0] & 128;
-    num.bin_int[0] = num.bin_int[0] & 127;
+    num.bin_int[0] &= 127;
 
     char* str = (char*)malloc(650);
-
     int i = 0;
-    while((!CheckZero(num) || num.bin_int[0] != 0) && i < 650){
+    while((!CheckZero(num) || num.bin_int[0] != 0) && i < 650) {
         int rem = Rem10(num);
-        str[i] = rem + '0';
-        i++;
+        str[i++] = rem + '0';
     }
 
-    if(sign == 128){
-        str[i] = '-';
-        i++;
+    if (sign == 128) {
+        str[i++] = '-';
     }
-    char* new_str = (char*)malloc(i + 1);
-    
-    for(int j = 0; j < i; j++){
-        new_str[j] = str[i - j - 1];
+    str[i] = '\0';
+
+    for (int j = 0; j < i / 2; j++) {
+        char tmp = str[j];
+        str[j] = str[i - j - 1];
+        str[i - j - 1] = tmp;
     }
-    free(str);
-    new_str[i] = '\0';
-    str = new_str;
 
     return str;
 }
