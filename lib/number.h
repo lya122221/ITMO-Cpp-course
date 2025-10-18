@@ -1,10 +1,13 @@
 #pragma once
 #include <cinttypes>
 #include <iostream>
+#include <cmath>
+#include <cstring>
 
+const int kBytes = 254;
 
 struct int2025_t {
-    // implement me
+    unsigned char bin_int[kBytes];
 };
 
 static_assert(sizeof(int2025_t) <= 254,  "Size of int2025_t must be no higher than 254 bytes");
