@@ -1,15 +1,21 @@
 #include "number.h"
 
-bool CheckZero(const int2025_t& num){
-    for (int i = 0; i < kBytes; i++){
+
+
+bool CheckZero(int2025_t num){
+    for (int i = 1; i < kBytes; i++){
         if (num.bin_int[i] != 0){
             return false;
         }
     }
+
     return true;
 }
 
 bool Large(const int2025_t& lhs, const int2025_t& rhs){
+    if (lhs == rhs) {
+        return false;
+    }
     for (int i = 0; i < kBytes; i++){
         if (lhs.bin_int[i] > rhs.bin_int[i])
             return true;
@@ -18,6 +24,7 @@ bool Large(const int2025_t& lhs, const int2025_t& rhs){
     }
     return false;
 }
+
 
 int2025_t Overflow(int2025_t num){
     num.bin_int[0] &= 129;
@@ -90,14 +97,15 @@ int2025_t MultiplyInt(const int2025_t &a, const int2025_t &b) {
         int av = a_abs.bin_int[i];
         for (int j = kBytes - 1; j >= 0; j--) {
             int k = i + j - (kBytes - 1);
-            if (k < 0 || k >= kBytes) continue;
+            if (k < 0 || k >= kBytes) {
+                continue;
+            }
 
             int bv = b_abs.bin_int[j];
             int product = av * bv + result.bin_int[k] + carry;
             result.bin_int[k] = product & 255;
             carry = product >> 8;
         }
-
         int k = i - 1;
         while (carry > 0 && k >= 0) {
             int sum = result.bin_int[k] + carry;
@@ -116,6 +124,7 @@ int2025_t MultiplyInt(const int2025_t &a, const int2025_t &b) {
 
     return result;
 }
+
 
 int2025_t from_int(int32_t i) {
     int2025_t num;
@@ -142,6 +151,7 @@ int2025_t from_int(int32_t i) {
 
     return num;
 }
+
 
 int2025_t from_string(const char* buff) {
     int2025_t res;
@@ -353,64 +363,41 @@ int2025_t operator*(const int2025_t& lhs, const int2025_t& rhs) {
 
 
 int2025_t operator/(const int2025_t& lhs, const int2025_t& rhs) {
-    if (rhs == from_int(0)) {
+    if (lhs == from_int(0) || rhs == from_int(0)){
         return from_int(0);
     }
-    if (lhs == from_int(0)) {
-        return from_int(0);
-    }
-
     int2025_t abs_lhs = lhs;
     int2025_t abs_rhs = rhs;
     abs_lhs.bin_int[0] &= 127;
     abs_rhs.bin_int[0] &= 127;
 
-    if (Large(abs_rhs, abs_lhs)) {
+    if (Large(abs_rhs, abs_lhs) && abs_rhs != abs_lhs) {
         return from_int(0);
     }
 
-    int2025_t result;
-    for (int i = 0; i < kBytes; i++) {
-        result.bin_int[i] = 0;
-    }
-
-    int2025_t remainder = abs_lhs;
+    int2025_t x = from_int(0);
     int2025_t one = from_int(1);
 
-    int2025_t step = from_int(1);
-    int2025_t temp_rhs = abs_rhs;
+    while (!Large(abs_rhs, abs_lhs) || abs_rhs == abs_lhs) {
+        int2025_t temp_divisor = abs_rhs;
+        int2025_t multiple = one;
 
-    while (!Large(temp_rhs, remainder)) {
-        step = step * from_int(10);
-        temp_rhs = temp_rhs * from_int(10);
-    }
-
-    step = step / from_int(10);
-    temp_rhs = temp_rhs / from_int(10);
-
-    while (!(Large(remainder, abs_rhs) == false && remainder != abs_rhs)) {
-        int quotient_digit = 0;
-        while (!Large(temp_rhs, remainder)) {
-            remainder = remainder - temp_rhs;
-            quotient_digit++;
+        while (!Large(temp_divisor + temp_divisor, abs_lhs)) {
+            temp_divisor = temp_divisor + temp_divisor;
+            multiple = multiple + multiple;
         }
-        result = result + (step * from_int(quotient_digit));
 
-        step = step / from_int(10);
-        temp_rhs = temp_rhs / from_int(10);
-
-        if (Large(step, from_int(0)) == false) {
-            break;
-        }
+        abs_lhs = abs_lhs - temp_divisor;
+        x = x + multiple;
     }
 
     if (is_negative(lhs) ^ is_negative(rhs)) {
-        result.bin_int[0] |= 128;
+        x.bin_int[0] |= 128; 
     } else {
-        result.bin_int[0] &= 127;
+        x.bin_int[0] &= 127;
     }
 
-    return Overflow(result);
+    return Overflow(x);
 }
 
 
