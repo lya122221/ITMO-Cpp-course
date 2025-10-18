@@ -137,7 +137,7 @@ int2025_t from_int(int32_t i) {
     }
 
     if (n != 0){
-        for(int j = 0; j < ((int)log2(n))/8 + 1; j++){
+        for(int j = 0; j < (int)(std::log2(n)/8) + 1; j++){
             num.bin_int[253 - j] = (n >> 8*j) & 255;
         }
     }
@@ -286,7 +286,7 @@ char* IntToStr(int2025_t num){
 
 int2025_t operator+(const int2025_t& lhs, const int2025_t& rhs) {
     int2025_t res;
-    for(int i = 0; i < 254; i++){
+    for(int i = 0; i < kBytes; i++){
         res.bin_int[i] = 0;
     }
 
