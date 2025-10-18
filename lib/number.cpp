@@ -262,7 +262,7 @@ char* IntToStr(int2025_t num){
     char* str = (char*)malloc(650);
 
     int i = 0;
-    while(!CheckZero(num) || num.bin_int[0] != 0){
+    while((!CheckZero(num) || num.bin_int[0] != 0) && i < 650){
         int rem = Rem10(num);
         str[i] = rem + '0';
         i++;
@@ -422,9 +422,8 @@ bool operator!=(const int2025_t& lhs, const int2025_t& rhs) {
 
 std::ostream& operator<<(std::ostream& stream, const int2025_t& value) {
     char* str = IntToStr(value);
-    for(int i = 0; i < std::strlen(str); i++){
-        stream << str[i];
-    }
+    stream << str;
+
     free(str);
     return stream;
 }
