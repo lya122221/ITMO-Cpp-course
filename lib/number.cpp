@@ -421,7 +421,10 @@ bool operator!=(const int2025_t& lhs, const int2025_t& rhs) {
 }
 
 std::ostream& operator<<(std::ostream& stream, const int2025_t& value) {
-    stream << IntToStr(value);
+    char* str = IntToStr(value);
+    for(int i = 0; i < std::strlen(str); i++){
+        stream << str[i];
+    }
 
     return stream;
 }
