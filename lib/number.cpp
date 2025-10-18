@@ -1,21 +1,15 @@
 #include "number.h"
 
-
-
-bool CheckZero(int2025_t num){
-    for (int i = 1; i < kBytes; i++){
+bool CheckZero(const int2025_t& num){
+    for (int i = 0; i < kBytes; i++){
         if (num.bin_int[i] != 0){
             return false;
         }
     }
-
     return true;
 }
 
 bool Large(const int2025_t& lhs, const int2025_t& rhs){
-    if (lhs == rhs) {
-        return false;
-    }
     for (int i = 0; i < kBytes; i++){
         if (lhs.bin_int[i] > rhs.bin_int[i])
             return true;
@@ -24,7 +18,6 @@ bool Large(const int2025_t& lhs, const int2025_t& rhs){
     }
     return false;
 }
-
 
 int2025_t Overflow(int2025_t num){
     num.bin_int[0] &= 129;
@@ -97,15 +90,14 @@ int2025_t MultiplyInt(const int2025_t &a, const int2025_t &b) {
         int av = a_abs.bin_int[i];
         for (int j = kBytes - 1; j >= 0; j--) {
             int k = i + j - (kBytes - 1);
-            if (k < 0 || k >= kBytes) {
-                continue;
-            }
+            if (k < 0 || k >= kBytes) continue;
 
             int bv = b_abs.bin_int[j];
             int product = av * bv + result.bin_int[k] + carry;
             result.bin_int[k] = product & 255;
             carry = product >> 8;
         }
+
         int k = i - 1;
         while (carry > 0 && k >= 0) {
             int sum = result.bin_int[k] + carry;
@@ -124,7 +116,6 @@ int2025_t MultiplyInt(const int2025_t &a, const int2025_t &b) {
 
     return result;
 }
-
 
 int2025_t from_int(int32_t i) {
     int2025_t num;
@@ -151,7 +142,6 @@ int2025_t from_int(int32_t i) {
 
     return num;
 }
-
 
 int2025_t from_string(const char* buff) {
     int2025_t res;
