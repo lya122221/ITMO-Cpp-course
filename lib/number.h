@@ -6,6 +6,8 @@
 #include <cstdint>
 #include <cstdlib>
 #include <ostream>
+#include <tuple>
+#include <string>
 
 const int kBytes = 254;
 

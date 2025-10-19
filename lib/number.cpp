@@ -1,11 +1,4 @@
 #include "number.h"
-#include <cinttypes>
-#include <iostream>
-#include <cmath>
-#include <cstring>
-#include <cstdint>
-#include <cstdlib>
-#include <ostream>
 
 
 
