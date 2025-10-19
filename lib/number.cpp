@@ -1,4 +1,12 @@
 #include "number.h"
+#include <cinttypes>
+#include <iostream>
+#include <cmath>
+#include <cstring>
+#include <cstdint>
+#include <cstdlib>
+#include <ostream>
+
 
 
 
@@ -76,7 +84,7 @@ int2025_t Overflow(int2025_t num){
     return num;
 }
 
-bool is_negative(const int2025_t& a) {
+bool Negative(const int2025_t& a) {
     return (a.bin_int[0] & 128) != 0;
 }
 
@@ -114,7 +122,7 @@ int2025_t MultiplyInt(const int2025_t &a, const int2025_t &b) {
         }
     }
 
-    bool sign_result = is_negative(a) ^ is_negative(b);
+    bool sign_result = Negative(a) ^ Negative(b);
     if (sign_result) {
         result.bin_int[0] |= 128;
     } else {
@@ -286,9 +294,9 @@ int2025_t operator+(const int2025_t& lhs, const int2025_t& rhs) {
         res.bin_int[i] = 0;
     }
 
-    if(!is_negative(lhs) && !is_negative(rhs)){
+    if(!Negative(lhs) && !Negative(rhs)){
         return SumOfAbs(lhs, rhs);
-    } else if (is_negative(lhs) && is_negative(rhs)){
+    } else if (Negative(lhs) && Negative(rhs)){
         int2025_t abs_lhs = lhs;
         int2025_t abs_rhs = rhs;
         abs_lhs.bin_int[0] &= 127;
@@ -302,11 +310,11 @@ int2025_t operator+(const int2025_t& lhs, const int2025_t& rhs) {
         int2025_t abs_rhs = rhs;
         abs_lhs.bin_int[0] &= 127;
         abs_rhs.bin_int[0] &= 127;
-        if(Large(abs_lhs, abs_rhs) && is_negative(lhs)){
+        if(Large(abs_lhs, abs_rhs) && Negative(lhs)){
             res = DifOfAbs(lhs, rhs);
             res.bin_int[0] |= 128;
             return Overflow(res);
-        } else if (Large(abs_rhs, abs_lhs) && is_negative(rhs)){
+        } else if (Large(abs_rhs, abs_lhs) && Negative(rhs)){
             res = DifOfAbs(rhs, lhs);
             res.bin_int[0] |= 128;
             return Overflow(res);
@@ -329,7 +337,7 @@ int2025_t operator-(const int2025_t& lhs, const int2025_t& rhs) {
     abs_lhs.bin_int[0] &= 127;
     abs_rhs.bin_int[0] &= 127;
 
-    if(!(is_negative(lhs) ^ is_negative(rhs))){
+    if(!(Negative(lhs) ^ Negative(rhs))){
         int sign = lhs.bin_int[0] & 128;
 
         if(Large(abs_lhs, abs_rhs)){
@@ -341,7 +349,7 @@ int2025_t operator-(const int2025_t& lhs, const int2025_t& rhs) {
         res.bin_int[0] |= sign;
         return Overflow(res); 
     } else {
-        if(is_negative(lhs)){
+        if(Negative(lhs)){
             res = SumOfAbs(abs_lhs, abs_rhs);
             res.bin_int[0] |= 128;
             return Overflow(res);
@@ -388,7 +396,7 @@ int2025_t operator/(const int2025_t& lhs, const int2025_t& rhs) {
         x = x + multiple;
     }
 
-    if (is_negative(lhs) ^ is_negative(rhs)) {
+    if (Negative(lhs) ^ Negative(rhs)) {
         x.bin_int[0] |= 128; 
     } else {
         x.bin_int[0] &= 127;
