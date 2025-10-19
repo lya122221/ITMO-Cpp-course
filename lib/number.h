@@ -3,6 +3,9 @@
 #include <iostream>
 #include <cmath>
 #include <cstring>
+#include <cstdint>
+#include <cstdlib>
+#include <ostream>
 
 const int kBytes = 254;
 
