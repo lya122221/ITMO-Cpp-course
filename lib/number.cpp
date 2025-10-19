@@ -137,16 +137,17 @@ int2025_t from_int(int32_t i) {
     }
 
     if (n != 0){
-        for(int j = 0; j < (int)(std::log2(n)/8) + 1; j++){
-            num.bin_int[253 - j] = (n >> 8*j) & 255;
+        int num_bytes = sizeof(int64_t);
+        for(int j = 0; j < num_bytes; j++){
+            num.bin_int[kBytes - 1 - j] = (n >> (8*j)) & 255;
         }
     }
 
     if (sign){
-        if ((int)num.bin_int[0] == 1){
+        if (num.bin_int[0] == 1){
             num.bin_int[0] = 129;
         } else {
-            num.bin_int[0] = 128;
+            num.bin_int[0] |= 128;
         }
     }
 
@@ -306,7 +307,7 @@ int2025_t operator+(const int2025_t& lhs, const int2025_t& rhs) {
             res.bin_int[0] |= 128;
             return Overflow(res);
         } else if (Large(abs_rhs, abs_lhs) && is_negative(rhs)){
-            res = DifOfAbs(lhs, rhs);
+            res = DifOfAbs(rhs, lhs);
             res.bin_int[0] |= 128;
             return Overflow(res);
         } else{
@@ -314,7 +315,7 @@ int2025_t operator+(const int2025_t& lhs, const int2025_t& rhs) {
                 res = DifOfAbs(abs_lhs, abs_rhs);
                 return Overflow(res);
             } else{
-                res = DifOfAbs(rhs, lhs);
+                res = DifOfAbs(abs_rhs, abs_lhs);
                 return Overflow(res);
             }
         }
@@ -327,6 +328,7 @@ int2025_t operator-(const int2025_t& lhs, const int2025_t& rhs) {
     int2025_t abs_rhs = rhs;
     abs_lhs.bin_int[0] &= 127;
     abs_rhs.bin_int[0] &= 127;
+
     if(!(is_negative(lhs) ^ is_negative(rhs))){
         int sign = lhs.bin_int[0] & 128;
 
@@ -334,11 +336,7 @@ int2025_t operator-(const int2025_t& lhs, const int2025_t& rhs) {
             res = DifOfAbs(abs_lhs, abs_rhs);
         } else {
             res = DifOfAbs(abs_rhs, abs_lhs);
-            if (sign == 128){
-                sign = 0;
-            } else {
-                sign = 128;
-            }
+            sign = sign ^ 128;
         }
         res.bin_int[0] |= sign;
         return Overflow(res); 
@@ -348,7 +346,9 @@ int2025_t operator-(const int2025_t& lhs, const int2025_t& rhs) {
             res.bin_int[0] |= 128;
             return Overflow(res);
         } else{
-            return Overflow(SumOfAbs(abs_lhs, abs_rhs));
+            res = SumOfAbs(abs_lhs, abs_rhs);
+            res.bin_int[0] &= 127;
+            return Overflow(res);
         }
     }
 }
