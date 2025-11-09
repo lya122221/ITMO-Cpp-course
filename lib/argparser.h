@@ -1,8 +1,4 @@
 #include <cstdint>
-#include <cstring>
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
 
 namespace nargparse {
 
@@ -67,27 +63,44 @@ namespace nargparse {
         int arguments_count;
     };
     
-    ArgumentParser CreateParser(const char* parser_name, const int kMaxArgLen = 128);
+    ArgumentParser CreateParser(const char* parser_name, const int kMaxArgLen);
 
     void FreeParser(ArgumentParser& parser);
 
-    void AddFlag(ArgumentParser& parser, const char* long_flag, bool* flag, const char* flag_name, bool new_flag_val = false);
-    void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_flag, bool* flag, const char* flag_name, bool new_flag_val = false);
+    void AddFlag(ArgumentParser& parser, const char* long_flag, bool* flag,
+                 const char* flag_name, bool new_flag_val = false);
 
-    void AddArgument(ArgumentParser& parser, const char* short_arg, const char* long_arg, int* arg_value, const char* arg_name, const uint8_t kNargs = kNargsRequired, bool (*CheckFunc)(const int&) = nullptr, const char* condition = nullptr);
-    void AddArgument(ArgumentParser& parser, const char* short_arg, const char* long_arg, float* arg_value, const char* arg_name, const uint8_t kNargs = kNargsRequired, bool (*CheckFunc)(const float&) = nullptr, const char* condition = nullptr);
-    void AddArgument(ArgumentParser& parser, const char* short_arg, const char* long_arg, void* arg_value, const char* arg_name, const uint8_t kNargs = kNargsRequired, bool (*CheckFunc)(const char* const&) = nullptr, const char* condition = nullptr);
+    void AddFlag(ArgumentParser& parser, const char* short_flag, const char* long_flag,
+                 bool* flag, const char* flag_name, bool new_flag_val = false);
 
-    void AddArgument(ArgumentParser& parser, int* arg_value, const char* arg_name, const uint8_t kNargs = kNargsRequired, bool (*CheckFunc)(const int&) = nullptr, const char* condition = nullptr);
-    void AddArgument(ArgumentParser& parser, float* arg_value, const char* arg_name, const uint8_t kNargs = kNargsRequired, bool (*CheckFunc)(const float&) = nullptr, const char* condition = nullptr);
-    void AddArgument(ArgumentParser& parser, void* arg_value, const char* arg_name, const uint8_t kNargs = kNargsRequired, bool (*CheckFunc)(const char* const&) = nullptr, const char* condition = nullptr);
+    void AddArgument(ArgumentParser& parser, const char* short_arg, const char* long_arg,
+                     int* arg_value, const char* arg_name, uint8_t kNargs = kNargsRequired,
+                     bool (*CheckFunc)(const int&) = nullptr, const char* condition = nullptr);
 
-    bool CheckInt(const char* str);
-    bool CheckFloat(const char* str);
+    void AddArgument(ArgumentParser& parser, const char* short_arg, const char* long_arg,
+                     float* arg_value, const char* arg_name, uint8_t kNargs = kNargsRequired,
+                     bool (*CheckFunc)(const float&) = nullptr, const char* condition = nullptr);
+
+    void AddArgument(ArgumentParser& parser, const char* short_arg, const char* long_arg,
+                     void* arg_value, const char* arg_name, uint8_t kNargs = kNargsRequired,
+                     bool (*CheckFunc)(const char* const&) = nullptr, const char* condition = nullptr);
+
+    void AddArgument(ArgumentParser& parser, int* arg_value, const char* arg_name,
+                     uint8_t kNargs = kNargsRequired,
+                     bool (*CheckFunc)(const int&) = nullptr, const char* condition = nullptr);
+
+    void AddArgument(ArgumentParser& parser, float* arg_value, const char* arg_name,
+                     uint8_t kNargs = kNargsRequired,
+                     bool (*CheckFunc)(const float&) = nullptr, const char* condition = nullptr);
+
+    void AddArgument(ArgumentParser& parser, void* arg_value, const char* arg_name,
+                     uint8_t kNargs = kNargsRequired,
+                     bool (*CheckFunc)(const char* const&) = nullptr, const char* condition = nullptr);
 
     bool Parse(ArgumentParser& parser, int argc, const char** argv);
 
-    int GetRepeatedCount(const ArgumentParser& parser, const char* arg_name)    ;
+    int GetRepeatedCount(const ArgumentParser& parser, const char* arg_name);
+
     bool GetRepeated(ArgumentParser& parser, const char* arg_name, int n, int* value);
     bool GetRepeated(ArgumentParser& parser, const char* arg_name, int n, float* value);
     bool GetRepeated(ArgumentParser& parser, const char* arg_name, int n, char** value);
