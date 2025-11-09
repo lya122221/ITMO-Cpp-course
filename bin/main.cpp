@@ -1,5 +1,6 @@
 #include <iostream>
 #include <lib/argparser.h>
+#include <vector>
 
 struct Options {
     bool sum = false;
@@ -10,7 +11,7 @@ bool IsEven(const int& value) {
     return value % 2 == 0;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, const char** argv) {
     Options options;
     int value;
     std::vector<int> values;

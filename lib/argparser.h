@@ -42,7 +42,7 @@ namespace nargparse {
             bool (*CheckChar)(const char* const&);
         } CheckFunc;
 
-        unsigned int repeated_count; // количество записей в аргумент
+        unsigned int repeated_count;
         size_t repeated_arr_size;
         union {
             int* int_arr;
@@ -54,7 +54,7 @@ namespace nargparse {
     };
     
     struct ArgumentParser {
-        char* parser_name;
+        const char* parser_name;
 
         Flag* flags;
         Argument* arguments;
@@ -65,9 +65,11 @@ namespace nargparse {
 
         int flags_count;
         int arguments_count;
+
+        const char* parser_usage;
     };
     
-    ArgumentParser CreateParser(char* parser_name, const int kMaxArgLen = 128);
+    ArgumentParser CreateParser(const char* parser_name, const int kMaxArgLen = 128, const char* parser_usage = "program");
     void FreeParser(ArgumentParser& parser);
     void AddFlag(ArgumentParser& parser, char* long_flag, bool* flag, char* flag_name, bool new_flag_val = false);
     void AddFlag(ArgumentParser& parser, char* short_flag, char* long_flag, bool* flag, char* flag_name, bool new_flag_val = false);

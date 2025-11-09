@@ -3,9 +3,10 @@
 
 namespace nargparse {
 
-    ArgumentParser CreateParser(char* parser_name, const int kMaxArgLen) {
+    ArgumentParser CreateParser(const char* parser_name, const int kMaxArgLen, const char* parser_usage) {
         ArgumentParser res;
         res.parser_name = parser_name;
+        res.parser_usage = parser_usage;
         res.kMaxArgLen = kMaxArgLen;
         res.arguments_count = 0;
         res.flags_count = 0;
@@ -615,6 +616,9 @@ namespace nargparse {
     }
 
     bool Parse(ArgumentParser& parser, int argc, const char** argv) {
+        if (strcmp(parser.parser_usage, argv[0]) != 0) {
+            return false;
+        }
         if (argc <= 0 || argv == nullptr) {
             return false;
         }
