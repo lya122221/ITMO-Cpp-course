@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstring>
 
 namespace nargparse {
 
