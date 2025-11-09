@@ -67,7 +67,7 @@ namespace nargparse {
         int arguments_count;
     };
     
-    ArgumentParser CreateParser(const char* parser_name, const int kMaxArgLen);
+    ArgumentParser CreateParser(const char* parser_name, const int kMaxArgLen = 128);
 
     void FreeParser(ArgumentParser& parser);
 
