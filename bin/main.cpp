@@ -66,5 +66,7 @@ int main(int argc, const char* argv[]) {
         nargparse::PrintHelp(parser);
     }
 
+    nargparse::FreeParser(parser);
+
     return 0;
 }
