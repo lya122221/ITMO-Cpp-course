@@ -6,6 +6,7 @@
 #include "filesoperation.h"
 #include "hamcode.h"
 #include <filesystem>
+#include <cstddef>
 
 
 void ListFiles(const std::string& arch_name) {

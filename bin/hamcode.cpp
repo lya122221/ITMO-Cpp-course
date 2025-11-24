@@ -1,7 +1,7 @@
 #include <iostream>
-#include <string>
 #include <vector>
 #include <cstdint>
+#include <cstddef>
 #include "hamcode.h"
 
 std::vector<unsigned char> HamCode84(const std::vector<unsigned char>& data) {
