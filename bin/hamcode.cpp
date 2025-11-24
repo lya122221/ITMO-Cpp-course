@@ -1,4 +1,6 @@
 #include <iostream>
+#include <string>
+#include <cstdint>
 #include "hamcode.h"
 
 std::vector<unsigned char> HamCode84(const std::vector<unsigned char>& data) {
