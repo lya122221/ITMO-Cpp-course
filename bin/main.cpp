@@ -1,7 +1,6 @@
 #include "argparser.h"
 #include "archiveoperation.h"
 #include "filesoperation.h"
-#include "hamcode.h"
 #include <iostream>
 #include <vector>
 #include <string>

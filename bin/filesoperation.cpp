@@ -1,4 +1,6 @@
 #include <vector>
+#include <string>
+#include <cstdint>
 #include <fstream>
 #include <iostream>
 #include "filesoperation.h"
