@@ -112,4 +112,4 @@ namespace nargparse {
     void PrintHelp(const ArgumentParser& parser);
 
 
-};
+}; // namespace nargparse

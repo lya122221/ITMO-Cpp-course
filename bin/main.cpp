@@ -3,6 +3,8 @@
 #include "filesoperation.h"
 #include "hamcode.h"
 #include <iostream>
+#include <vector>
+#include <string>
 
 int main(int argc, const char* argv[]) {
     nargparse::ArgumentParser parser = nargparse::CreateParser("parser");

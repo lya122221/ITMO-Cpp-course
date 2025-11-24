@@ -3,6 +3,9 @@
 #include "archiveoperation.h"
 #include "hamcode.h"
 #include <filesystem>
+#include <vector>
+#include <string>
+#include <cstdint>
 
 void CreateArchive(const std::string& arc_name, const std::vector<std::string>& file_names) {
     std::ofstream archive(arc_name, std::ios::binary);

@@ -1,3 +1,4 @@
+#pragma once
 #include <string>
 
 void ListFiles(const std::string& arch_name);
