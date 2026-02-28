@@ -10,10 +10,51 @@ public:
     using size_type = size_t;
     using allocator_type = Allocator;
 
-    circular_buffer(size_type capacity, const Allocator& alloc = Allocator());
-    circular_buffer(const circular_buffer& other);
-    circular_buffer& operator=(const circular_buffer& other);
-    ~circular_buffer();
+    circular_buffer(size_type capacity, const Allocator& alloc = Allocator()) 
+                  : data_(nullptr), 
+                    capacity_(capacity), 
+                    size_(0), head_(0), 
+                    alloc_(alloc)  
+    {
+        if (capacity > 0) {
+            data_ = std::allocator_traits<Allocator>::allocate(alloc_, capacity_);
+        }
+    }
+    circular_buffer(const circular_buffer& other)
+                  : data_(nullptr), 
+                    capacity_(other.capacity_), 
+                    size_(0), 
+                    head_(0), 
+                    alloc_(std::allocator_traits<Allocator>::select_on_container_copy_construction(other.alloc_))
+    {
+        if (capacity_ > 0) {
+            data_ = std::allocator_traits<Allocator>::allocate(alloc_, capacity_);
+
+            for (size_type index = 0; index < other.size_; index++) {
+                size_type other_index = (other.head_ + i) % other.capacity_;
+                std::allocator_traits<Allocator>::construct(alloc_, data_ + i, other.data_[other_index]);
+                size_++;
+            }
+        }
+    }
+    circular_buffer& operator=(const circular_buffer& other) {
+        if (this != &other) {
+            circular_buffer tmp(other);
+            swap(tmp);
+        }
+
+        return *this;
+    }
+    ~circular_buffer() {
+        for (size_type i = 0; i < size_; i++) {
+            size_type index = (head_ + i) % capacity_;
+            std::allocator_traits<Allocator>::destroy(alloc_, data_ + index);
+        }
+
+        if (data_ > 0) {
+            std::allocator_traits<Allocator>::deallocate(alloc_, data_, capacity_);
+        }
+    }
 
     class const_iterator;
     class iterator;
@@ -76,4 +117,6 @@ private:
     size_type capacity_;
     size_type size_;
     size_type head_;
+
+    Allocator alloc_;
 };
