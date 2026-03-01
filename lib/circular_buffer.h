@@ -51,7 +51,7 @@ public:
             std::allocator_traits<Allocator>::destroy(alloc_, data_ + index);
         }
 
-        if (data_ > 0) {
+        if (data_ != nullptr) {
             std::allocator_traits<Allocator>::deallocate(alloc_, data_, capacity_);
         }
     }
