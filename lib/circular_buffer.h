@@ -245,28 +245,51 @@ public:
             return (owner_->head_ + index_) % owner_->capacity_;
         }
     };
+    // TODO
     class reverse_iterator;
     class const_reverse_iterator;
 
-    iterator begin();
-    const_iterator begin() const;
-    const_iterator cbegin() const;
+    iterator begin() {
+        return iterator(this, 0);
+    }
+    const_iterator begin() const {
+        return const_iterator(this, 0);
+    }
+    const_iterator cbegin() const {
+        return const_iterator(this, 0);
+    }
+
+    // TODO
     reverse_iterator rbegin();
     const_reverse_iterator rbegin() const;
     const_reverse_iterator crbegin() const;
 
-    iterator end();
-    const_iterator end() const;
-    const_iterator cend() const;
+    iterator end() {
+        return iterator(this, size_);
+    }
+    const_iterator end() const {
+        return const_iterator(this, size_);
+    }
+    const_iterator cend() const {
+        return const_iterator(this, size_);
+    }
+
+    // TODO
     reverse_iterator rend();
     const_reverse_iterator rend() const;
     const_reverse_iterator crend() const;
 
     void swap(circular_buffer& other);
     
-    size_type size() const;
-    size_type max_size() const;
-    bool empty() const;
+    size_type size() const {
+        return size_;
+    }
+    size_type max_size() const {
+        return alloc_traits::max_size(alloc_);
+    }
+    bool empty() const {
+        return size_ == 0;
+    }
 
     iterator insert(const_iterator pos, const T& value);
     iterator insert(const_iterator pos, size_type count, const T& value);
@@ -284,14 +307,36 @@ public:
 
     allocator_type get_allocator() const;
 
-    reference front();
-    const_reference front() const;
-    reference back();
-    const_reference back() const;
-    reference operator[](size_type pos);
-    const_reference operator[](size_type pos) const;
-    reference at(size_type pos);
-    const_reference at(size_type pos) const;
+    reference front() {
+        return data_[head_];
+    }
+    const_reference front() const {
+        return data_[head_];
+    }
+    reference back() {
+        return data_[(head_ + size_ - 1) % capacity_];
+    }
+    const_reference back() const {
+        return data_[(head_ + size_ - 1) % capacity_];
+    }
+    reference operator[](size_type pos) {
+        return data_[(head_ + pos) % capacity_];
+    }
+    const_reference operator[](size_type pos) const {
+        return data_[(head_ + pos) % capacity_];
+    }
+    reference at(size_type pos) {
+        if (pos >= size_) {
+            throw std::out_of_range("index out of range");
+        }
+        return data_[(head_ + pos) % capacity_];
+    }
+    const_reference at(size_type pos) const {
+        if (pos >= size_) {
+            throw std::out_of_range("index out of range");
+        }
+        return data_[(head_ + pos) % capacity_];
+    }
 
     void push_back(const T& value);
     void pop_back();
