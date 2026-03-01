@@ -9,6 +9,7 @@ public:
     using difference_type = std::ptrdiff_t;
     using size_type = size_t;
     using allocator_type = Allocator;
+    using pointer = T*;
 
     circular_buffer(size_type capacity, const Allocator& alloc = Allocator()) 
                   : data_(nullptr), 
@@ -56,8 +57,194 @@ public:
         }
     }
 
-    class const_iterator;
-    class iterator;
+    class const_iterator {
+    public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using reference = const T&;
+        using size_type = size_t;
+        using pointer = const T*;
+
+        const_iterator() : owner_(nullptr), index_(0) {}
+
+        const_iterator(const circular_buffer* owner, size_type index) 
+               : owner_(owner),  
+                 index_(index) {}
+
+        const_iterator& operator++() {
+            ++index_;
+            return *this;
+        }
+
+        const_iterator operator++(int) {
+            const_iterator tmp = *this;
+            ++index_;
+            return tmp;
+        }
+
+        const_iterator& operator--() {
+            --index_;
+            return *this;
+        }
+
+        const_iterator operator--(int) {
+            const_iterator tmp = *this;
+            --index_;
+            return tmp;
+        }
+
+        const_iterator& operator+=(difference_type n) {
+            index_ += n;
+            return *this;
+        }
+
+        const_iterator operator+(difference_type n) const {
+            const_iterator tmp = *this;
+            tmp += n;
+            return tmp;
+        }
+
+        friend const_iterator operator+(difference_type n, const const_iterator& it) {
+            return it + n;
+        }
+
+        const_iterator& operator-=(difference_type n) {
+            index_ -= n;
+            return *this;
+        } 
+
+        const_iterator operator-(difference_type n) const {
+            const_iterator tmp = *this;
+            tmp -= n;
+            return tmp;
+        }
+
+        difference_type operator-(const const_iterator& other) const {
+            return static_cast<difference_type>(index_) - static_cast<difference_type>(other.index_);
+        }
+
+        reference operator[](difference_type n) const {
+            return owner_->data_[(owner_->head_ + index_ + n) % owner_->capacity_];
+        }
+
+        reference operator*() const {
+            return owner_->data_[real_index_()];
+        }
+
+        pointer operator->() const {
+            return owner_->data_ + real_index_();
+        }
+
+        bool operator==(const const_iterator& other) const { return index_ == other.index_; }
+        bool operator!=(const const_iterator& other) const { return index_ != other.index_; }
+        bool operator<(const const_iterator& other) const { return index_ < other.index_; }
+        bool operator>(const const_iterator& other) const { return index_ > other.index_; }
+        bool operator<=(const const_iterator& other) const { return index_ <= other.index_; }
+        bool operator>=(const const_iterator& other) const { return index_ >= other.index_; }
+
+    private:
+        const circular_buffer* owner_;
+        size_type index_;
+        
+        size_type real_index_() const {
+            return (owner_->head_ + index_) % owner_->capacity_;
+        }
+    };
+    class iterator {
+    public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using reference = T&;
+        using size_type = size_t;
+        using pointer = T*;
+
+        iterator() : owner_(nullptr), index_(0) {}
+
+        iterator(circular_buffer* owner, size_type index) 
+               : owner_(owner),  
+                 index_(index) {}
+
+        iterator& operator++() {
+            ++index_;
+            return *this;
+        }
+
+        iterator operator++(int) {
+            iterator tmp = *this;
+            ++index_;
+            return tmp;
+        }
+
+        iterator& operator--() {
+            --index_;
+            return *this;
+        }
+
+        iterator operator--(int) {
+            iterator tmp = *this;
+            --index_;
+            return tmp;
+        }
+
+        iterator& operator+=(difference_type n) {
+            index_ += n;
+            return *this;
+        }
+
+        iterator operator+(difference_type n) const {
+            iterator tmp = *this;
+            tmp += n;
+            return tmp;
+        }
+
+        friend iterator operator+(difference_type n, const iterator& it) {
+            return it + n;
+        }
+
+        iterator& operator-=(difference_type n) {
+            index_ -= n;
+            return *this;
+        } 
+
+        iterator operator-(difference_type n) const {
+            iterator tmp = *this;
+            tmp -= n;
+            return tmp;
+        }
+
+        difference_type operator-(const iterator& other) const {
+            return static_cast<difference_type>(index_) - static_cast<difference_type>(other.index_);
+        }
+
+        reference operator[](difference_type n) const {
+            return owner_->data_[(owner_->head_ + index_ + n) % owner_->capacity_];
+        }
+
+        reference operator*() const {
+            return owner_->data_[real_index_()];
+        }
+
+        pointer operator->() const {
+            return owner_->data_ + real_index_();
+        }
+
+        bool operator==(const iterator& other) const { return index_ == other.index_; }
+        bool operator!=(const iterator& other) const { return index_ != other.index_; }
+        bool operator<(const iterator& other) const { return index_ < other.index_; }
+        bool operator>(const iterator& other) const { return index_ > other.index_; }
+        bool operator<=(const iterator& other) const { return index_ <= other.index_; }
+        bool operator>=(const iterator& other) const { return index_ >= other.index_; }
+
+    private:
+        circular_buffer* owner_;
+        size_type index_;
+        
+        size_type real_index_() const {
+            return (owner_->head_ + index_) % owner_->capacity_;
+        }
+    };
     class reverse_iterator;
     class const_reverse_iterator;
 
@@ -112,7 +299,7 @@ public:
     void pop_front();
 
 private:
-    T* data_;
+    pointer data_;
 
     size_type capacity_;
     size_type size_;
