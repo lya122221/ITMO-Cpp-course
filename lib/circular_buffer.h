@@ -526,10 +526,78 @@ public:
     iterator erase(const_iterator first, const_iterator last);
 
     void clear();
-    void assign(size_type count, const T& value);
+
+    void assign(size_type count, const T& value) {
+        if constexpr (Extendable) {
+            if (count > capacity_) {
+                reallocate(count);
+            } else {
+                destroy_all();
+            }
+        } else {
+            destroy_all();
+            count = std::min(count, capacity_);
+        }
+
+        size_type constructed = 0;
+        for (size_type i = 0; i < count; i++) {
+            alloc_traits::construct(alloc_, data_ + i, value);
+            constructed++;
+        }
+
+        size_ = count;
+    }
     template<typename InputIt>
-    void assign(InputIt first, InputIt last);
-    void assign(std::initializer_list<T> ilist);
+    void assign(InputIt first, InputIt last) {
+        size_type count = static_cast<size_type>(std::distance(first, last));
+
+        if constexpr (Extendable) {
+            if (count > capacity_) {
+                reallocate(count);
+            } else {
+                destroy_all();
+            }
+
+            size_type constructed = 0;
+
+            for (auto it = first; it != last; it++) {
+                alloc_traits::construct(alloc_, data_ + constructed, *it);
+                constructed++;
+            }
+
+            size_ = count;
+        } else {
+            destroy_all();
+
+            if (count > capacity_) {
+                size_type skip = count - capacity_;
+                auto it = first;
+                for (size_type i = 0; i < skip; i++) {
+                    it++;
+                }
+
+                size_type constructed = 0;
+                while (it != last) {
+                    alloc_traits::construct(alloc_, data_ + constructed, *it);
+                    constructed++;
+                    it++;
+                }
+
+                size_ = capacity_;
+            } else {
+                size_type constructed = 0;
+                for (auto it = first; it != last; it++) {
+                    alloc_traits::construct(alloc_, data_ + constructed, *it);
+                    constructed++;
+                }
+
+                size_ = count;
+            }
+        }
+    }
+    void assign(std::initializer_list<T> ilist) {
+        assign(ilist.begin(), ilist.end());
+    }
 
     allocator_type get_allocator() const;
 
@@ -570,7 +638,7 @@ public:
     void pop_front();
 
 private:
-    using alloc_traits = std::allocator_traits<Allocator>
+    using alloc_traits = std::allocator_traits<Allocator>;
     pointer data_;
 
     size_type capacity_;
@@ -578,4 +646,25 @@ private:
     size_type head_;
 
     Allocator alloc_;
+
+    void destroy_all() {
+        for (size_type i = 0; i < size_; ++i) {
+            size_type idx = (head_ + i) % capacity_;
+            alloc_traits::destroy(alloc_, data_ + idx);
+        }
+        size_ = 0;
+        head_ = 0;
+    }
+
+    void reallocate(size_type new_cap) {
+        destroy_all();
+        if (data_) {
+            alloc_traits::deallocate(alloc_, data_, capacity_);
+            data_ = nullptr;
+        }
+        capacity_ = new_cap;
+        if (capacity_ > 0) {
+            data_ = alloc_traits::allocate(alloc_, capacity_);
+        }
+    }
 };
