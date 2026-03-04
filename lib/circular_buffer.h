@@ -289,11 +289,13 @@ public:
     const_reverse_iterator crend() const;
 
     void swap(circular_buffer& other) {
+        if constexpr (alloc_traits::propagate_on_container_swap::value) {
+            std::swap(alloc_, other.alloc_);
+        }
         std::swap(data_, other.data_);
         std::swap(capacity_, other.capacity_);
         std::swap(size_, other.size_);
         std::swap(head_, other.head_);
-        std::swap(alloc_, other.alloc_);
     }
     
     size_type size() const {
