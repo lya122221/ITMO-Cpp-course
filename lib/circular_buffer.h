@@ -522,10 +522,43 @@ public:
     template<typename InputIt>
     iterator insert(const_iterator pos, InputIt first, InputIt last);
 
-    iterator erase(const_iterator pos);
-    iterator erase(const_iterator first, const_iterator last);
+    iterator erase(const_iterator pos) {
+        return erase(pos, pos + 1);
+    }
+    iterator erase(const_iterator first, const_iterator last) {
+        if (first == last) {
+            return iterator(this, first.index_);
+        }
 
-    void clear();
+        size_type first_idx = first.index_;
+        size_type last_idx = last.index_;
+        size_type count = last_idx - first_idx;
+
+        size_type elements_after = size_ - last_idx;
+        for (size_type i = 0; i < elements_after; i++) {
+            size_type dst = (head_ + first_idx + i) % capacity_;
+            size_type src = (head_ + last_idx + i) % capacity_;
+            data_[dst] = data_[src];
+        }
+
+        for (size_type i = 0; i < count; i++) {
+            size_type idx = (head_ + size_ - 1 - i) % capacity_;
+            alloc_traits::destroy(alloc_, data_ + idx);
+        }
+
+        size_ -= count;
+
+        return iterator(this, first_idx);
+    }
+
+    void clear() {
+        for (size_type i = 0; i < size_; i++) {
+            size_type idx = (head_ + i) % capacity_;
+            alloc_traits::destroy(alloc_, data_ + idx);
+        }
+        size_ = 0;
+        head_ = 0;
+    }
 
     void assign(size_type count, const T& value) {
         if constexpr (Extendable) {
