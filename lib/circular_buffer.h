@@ -488,15 +488,12 @@ public:
     reverse_iterator rend() {
         return reverse_iterator(this, 0);
     }
-
     const_reverse_iterator rend() const {
         return const_reverse_iterator(this, 0);
     }
-
     const_reverse_iterator crend() const {
         return const_reverse_iterator(this, 0);
     }
-
     void swap(circular_buffer& other) {
         if constexpr (alloc_traits::propagate_on_container_swap::value) {
             std::swap(alloc_, other.alloc_);
@@ -665,10 +662,50 @@ public:
         return data_[(head_ + pos) % capacity_];
     }
 
-    void push_back(const T& value);
-    void pop_back();
-    void push_front(const T& value);
-    void pop_front();
+    void push_back(const T& value) {
+        if (size_ == capacity_) {
+            if constexpr (Extendable) {
+                grow();
+            } else {
+                alloc_traits::destroy(alloc_, data_ + head_);
+                alloc_traits::construct(alloc_, data_ + head_, value);
+                head_ = (head_ + 1) % capacity_;
+                return;
+            }
+        }
+
+        size_type tail = (head_ + size_) % capacity_;
+        alloc_traits::construct(alloc_, data_ + tail, value);
+        size_++;
+    }
+    void pop_back() {
+        size_type back_idx = (head_ + size_ - 1) % capacity_;
+        alloc_traits::destroy(alloc_, data_ + back_idx);
+        size_--;
+    }
+    void push_front(const T& value) {
+        if (size_ == capacity_) {
+            if constexpr (Extendable) {
+                grow();
+            } else {
+                size_type back_idx = (head_ + size_ - 1) % capacity_;
+                alloc_traits::destroy(alloc_, data_ + back_idx);
+                head_ = (head_ == 0) ? capacity_ - 1 : head_ - 1;
+                alloc_traits::construct(alloc_, data_ + head_, value);
+
+                return;
+            }
+        }
+
+        head_ = (head_ == 0) ? capacity_ - 1 : head_ - 1;
+        alloc_traits::construct(alloc_, data_ + head_, value);
+        size_++;
+    }
+    void pop_front() {
+        alloc_traits::destroy(alloc_, data_ + head_);
+        head_ = (head_ + 1) % capacity_;
+        size_--;
+    }
 
 private:
     using alloc_traits = std::allocator_traits<Allocator>;
@@ -699,5 +736,27 @@ private:
         if (capacity_ > 0) {
             data_ = alloc_traits::allocate(alloc_, capacity_);
         }
+    }
+
+    void grow() {
+        size_type new_cap = (capacity_ == 0) ? 1 : capacity_ * 2;
+        pointer new_data = alloc_traits::allocate(alloc_, new_cap);
+
+        size_type moved = 0;
+        for (size_type i = 0; i < size_; i++) {
+            size_type old_idx = (head_ + i) % capacity_;
+            alloc_traits::construct(alloc_, new_data + i, data_[old_idx]);
+            moved++;
+        }
+
+        destroy_all();
+        if (data_) {
+            alloc_traits::deallocate(alloc_, data_, capacity_);
+        }
+
+        data_ = new_data;
+        capacity_ = new_cap;
+        head_ = 0;
+        size_ = moved;
     }
 };
