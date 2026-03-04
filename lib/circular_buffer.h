@@ -254,9 +254,209 @@ public:
             return (owner_->head_ + index_) % owner_->capacity_;
         }
     };
-    // TODO
-    class reverse_iterator;
-    class const_reverse_iterator;
+    class reverse_iterator {
+    public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using reference = T&;
+        using pointer = T*;
+
+        reverse_iterator() : owner_(nullptr), index_(0) {}
+
+        reverse_iterator(circular_buffer* owner, size_type index) : owner_(owner), index_(index) {}
+
+        reverse_iterator(const iterator& it) : owner_(it.owner_), index_(it.index_) {}
+
+        iterator base() const {
+            return iterator(owner_, index_);
+        }
+
+        reference operator*() const {
+            return owner_->data_[real_index_()];
+        }
+
+        pointer operator->() const {
+            return owner_->data_ + real_index_();
+        }
+
+        reference operator[](difference_type n) const {
+            return owner_->data_[
+                (owner_->head_ + index_ - 1 - n) % owner_->capacity_
+            ];
+        }
+
+        reverse_iterator& operator++() {
+            --index_;
+            return *this;
+        }
+
+        reverse_iterator operator++(int) {
+            reverse_iterator tmp = *this;
+            --index_;
+            return tmp;
+        }
+
+        reverse_iterator& operator--() {
+            ++index_;
+            return *this;
+        }
+
+        reverse_iterator operator--(int) {
+            reverse_iterator tmp = *this;
+            ++index_;
+            return tmp;
+        }
+
+        reverse_iterator& operator+=(difference_type n) {
+            index_ -= n;
+            return *this;
+        }
+
+        reverse_iterator& operator-=(difference_type n) {
+            index_ += n;
+            return *this;
+        }
+
+        reverse_iterator operator+(difference_type n) const {
+            reverse_iterator tmp = *this;
+            tmp += n;
+            return tmp;
+        }
+
+        reverse_iterator operator-(difference_type n) const {
+            reverse_iterator tmp = *this;
+            tmp -= n;
+            return tmp;
+        }
+
+        difference_type operator-(const reverse_iterator& other) const {
+            return static_cast<difference_type>(other.index_) - static_cast<difference_type>(index_);
+        }
+
+        friend reverse_iterator operator+(difference_type n, const reverse_iterator& it) {
+            return it + n;
+        }
+
+        bool operator==(const reverse_iterator& other) const { return index_ == other.index_; }
+        bool operator!=(const reverse_iterator& other) const { return index_ != other.index_; }
+        bool operator<(const reverse_iterator& other) const { return index_ > other.index_; }
+        bool operator>(const reverse_iterator& other) const { return index_ < other.index_; }
+        bool operator<=(const reverse_iterator& other) const { return index_ >= other.index_; }
+        bool operator>=(const reverse_iterator& other) const { return index_ <= other.index_; }
+
+        friend class circular_buffer;
+        friend class const_reverse_iterator;
+
+    private:
+        circular_buffer* owner_;
+        size_type index_;
+
+        size_type real_index_() const {
+            return (owner_->head_ + index_ - 1) % owner_->capacity_;
+        }
+    };
+    class const_reverse_iterator {
+    public:
+        using iterator_category = std::random_access_iterator_tag;
+        using value_type = T;
+        using difference_type = std::ptrdiff_t;
+        using reference = const T&;
+        using pointer = const T*;
+
+        const_reverse_iterator() : owner_(nullptr), index_(0) {}
+
+        const_reverse_iterator(const circular_buffer* owner, size_type index) : owner_(owner), index_(index) {}
+
+        const_reverse_iterator(const reverse_iterator& it) : owner_(it.owner_), index_(it.index_) {}
+
+        const_reverse_iterator(const const_iterator& it) : owner_(it.owner_), index_(it.index_) {}
+
+        const_iterator base() const {
+            return const_iterator(owner_, index_);
+        }
+
+        reference operator*() const {
+            return owner_->data_[real_index_()];
+        }
+
+        pointer operator->() const {
+            return owner_->data_ + real_index_();
+        }
+
+        reference operator[](difference_type n) const {
+            return owner_->data_[(owner_->head_ + index_ - 1 - n) % owner_->capacity_];
+        }
+
+        const_reverse_iterator& operator++() {
+            --index_;
+            return *this;
+        }
+
+        const_reverse_iterator operator++(int) {
+            const_reverse_iterator tmp = *this;
+            --index_;
+            return tmp;
+        }
+
+        const_reverse_iterator& operator--() {
+            ++index_;
+            return *this;
+        }
+
+        const_reverse_iterator operator--(int) {
+            const_reverse_iterator tmp = *this;
+            ++index_;
+            return tmp;
+        }
+
+        const_reverse_iterator& operator+=(difference_type n) {
+            index_ -= n;
+            return *this;
+        }
+
+        const_reverse_iterator& operator-=(difference_type n) {
+            index_ += n;
+            return *this;
+        }
+
+        const_reverse_iterator operator+(difference_type n) const {
+            const_reverse_iterator tmp = *this;
+            tmp += n;
+            return tmp;
+        }
+
+        const_reverse_iterator operator-(difference_type n) const {
+            const_reverse_iterator tmp = *this;
+            tmp -= n;
+            return tmp;
+        }
+
+        difference_type operator-(const const_reverse_iterator& other) const {
+            return static_cast<difference_type>(other.index_) - static_cast<difference_type>(index_);
+        }
+
+        friend const_reverse_iterator operator+(difference_type n, const const_reverse_iterator& it) {
+            return it + n;
+        }
+
+        bool operator==(const const_reverse_iterator& other) const { return index_ == other.index_; }
+        bool operator!=(const const_reverse_iterator& other) const { return index_ != other.index_; }
+        bool operator<(const const_reverse_iterator& other) const { return index_ > other.index_; }
+        bool operator>(const const_reverse_iterator& other) const { return index_ < other.index_; }
+        bool operator<=(const const_reverse_iterator& other) const { return index_ >= other.index_; }
+        bool operator>=(const const_reverse_iterator& other) const { return index_ <= other.index_; }
+
+        friend class circular_buffer;
+
+    private:
+        const circular_buffer* owner_;
+        size_type index_;
+
+        size_type real_index_() const {
+            return (owner_->head_ + index_ - 1) % owner_->capacity_;
+        }
+    };
 
     iterator begin() {
         return iterator(this, 0);
