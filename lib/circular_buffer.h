@@ -467,12 +467,15 @@ public:
     const_iterator cbegin() const {
         return const_iterator(this, 0);
     }
-
-    // TODO
-    reverse_iterator rbegin();
-    const_reverse_iterator rbegin() const;
-    const_reverse_iterator crbegin() const;
-
+    reverse_iterator rbegin() {
+        return reverse_iterator(this, size_);
+    }
+    const_reverse_iterator rbegin() const {
+        return const_reverse_iterator(this, size_);
+    }
+    const_reverse_iterator crbegin() const {
+        return const_reverse_iterator(this, size_);
+    }
     iterator end() {
         return iterator(this, size_);
     }
@@ -482,11 +485,17 @@ public:
     const_iterator cend() const {
         return const_iterator(this, size_);
     }
+    reverse_iterator rend() {
+        return reverse_iterator(this, 0);
+    }
 
-    // TODO
-    reverse_iterator rend();
-    const_reverse_iterator rend() const;
-    const_reverse_iterator crend() const;
+    const_reverse_iterator rend() const {
+        return const_reverse_iterator(this, 0);
+    }
+
+    const_reverse_iterator crend() const {
+        return const_reverse_iterator(this, 0);
+    }
 
     void swap(circular_buffer& other) {
         if constexpr (alloc_traits::propagate_on_container_swap::value) {
