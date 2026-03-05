@@ -13,6 +13,8 @@ public:
     using allocator_type = Allocator;
     using pointer = T*;
 
+    circular_buffer() : circular_buffer(0) {}
+    explicit circular_buffer(const Allocator& alloc) : circular_buffer(0, alloc) {}
     circular_buffer(size_type capacity, const Allocator& alloc = Allocator()) 
                   : data_(nullptr), 
                     capacity_(capacity), 
@@ -57,6 +59,12 @@ public:
         if (data_ != nullptr) {
             alloc_traits::deallocate(alloc_, data_, capacity_);
         }
+    }
+    circular_buffer(std::initializer_list<T> ilist, const Allocator& alloc = Allocator()) : circular_buffer(ilist.size(), alloc) {
+        assign(ilist.begin(), ilist.end());
+    }
+    circular_buffer(size_type n, const T& value, const Allocator& alloc = Allocator()) : circular_buffer(n, alloc) {
+        assign(n, value);
     }
 
     class iterator {
@@ -745,7 +753,9 @@ public:
         assign(ilist.begin(), ilist.end());
     }
 
-    allocator_type get_allocator() const;
+    allocator_type get_allocator() const {
+        return alloc_;
+    }
 
     reference front() {
         return data_[head_];
