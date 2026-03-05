@@ -681,6 +681,66 @@ public:
         head_ = 0;
     }
 
+    void resize(size_type new_size) {
+        if (new_size < size_) {
+            for (size_type i = new_size; i < size_; i++) {
+                size_type idx = (head_ + i) % capacity_;
+                alloc_traits::destroy(alloc_, data_ + idx);
+            }
+
+            size_ = new_size;
+        } else if (new_size > size_) {
+            if (new_size > capacity_) {
+                if constexpr (Extendable) {
+                    while (new_size > capacity_) {
+                        grow();
+                    }
+                } else {
+                    throw std::out_of_range("resizing a non-expandable buffer");
+                }
+            }
+
+            size_type constructed = size_;
+            for (size_type i = size_; i < new_size; i++) {
+                size_type idx = (head_ + i) % capacity_;
+                alloc_traits::construct(alloc_, data_ + idx);
+                constructed++;
+            }
+
+            size_ = new_size;
+        }
+    }
+
+    void resize(size_type new_size, const T& value) {
+        if (new_size < size_) {
+            for (size_type i = new_size; i < size_; i++) {
+                size_type idx = (head_ + i) % capacity_;
+                alloc_traits::destroy(alloc_, data_ + idx);
+            }
+            
+            size_ = new_size;
+        } else if (new_size > size_) {
+            if (new_size > capacity_) {
+                if constexpr (Extendable) {
+                    while (new_size > capacity_) {
+                        grow();
+                    }
+                } else {
+                    throw std::out_of_range("resizing a non-expandable buffer");
+                }
+            }
+
+            size_type constructed = size_;
+            for (size_type i = size_; i < new_size; i++) {
+                size_type idx = (head_ + i) % capacity_;
+                alloc_traits::construct(alloc_, data_ + idx, value);
+                constructed++;
+            }
+
+            size_ = new_size;
+        }
+    }
+
     void assign(size_type count, const T& value) {
         if constexpr (Extendable) {
             if (count > capacity_) {
