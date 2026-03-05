@@ -514,10 +514,126 @@ public:
         return size_ == 0;
     }
 
-    iterator insert(const_iterator pos, const T& value);
-    iterator insert(const_iterator pos, size_type count, const T& value);
-    template<typename InputIt>
-    iterator insert(const_iterator pos, InputIt first, InputIt last);
+    iterator insert(const_iterator pos, const T& value) {
+        return insert(pos, size_type(1), value);
+    }
+    iterator insert(const_iterator pos, size_type count, const T& value) {
+        size_type pos_idx = pos.index_;
+
+        if (count == 0) {
+            return iterator(this, pos_idx);
+        }
+
+        if constexpr (Extendable) {
+            size_type saved_pos = pos_idx;
+            while (size_ + count > capacity_) {
+                grow();
+            }
+            pos_idx = saved_pos;
+        } else {
+            if (size_ + count > capacity_) {
+                if (capacity_ == 0) {
+                    return iterator(this, 0);
+                }
+
+                size_type overflow = size_ + count - capacity_;
+
+                size_type front_drop = std::min(overflow, pos_idx);
+                for (size_type i = 0; i < front_drop; i++) {
+                    alloc_traits::destroy(alloc_, data_ + head_);
+                    head_ = (head_ + 1) % capacity_;
+                    size_--;
+                }
+
+                pos_idx -= front_drop;
+                overflow -= front_drop;
+
+                count -= overflow;
+
+                if (count == 0) {
+                    return iterator(this, pos_idx);
+                }
+            }
+        }
+
+        size_type elements_after = size_ - pos_idx;
+        shift_right(pos_idx, count);
+
+        for (size_type i = 0; i < count; i++) {
+            size_type idx = (head_ + pos_idx + i) % capacity_;
+            if (i < elements_after) {
+                data_[idx] = value;
+            } else {
+                alloc_traits::construct(alloc_, data_ + idx, value);
+            }
+        }
+
+        size_ += count;
+        return iterator(this, pos_idx);
+    }
+    template<typename InputIt, typename = std::void_t<typename std::iterator_traits<InputIt>::iterator_category>>
+    iterator insert(const_iterator pos, InputIt first, InputIt last) {
+        size_type count = static_cast<size_type>(std::distance(first, last));
+        size_type pos_idx = pos.index_;
+
+        if (count == 0) {
+            return iterator(this, pos_idx);
+        }
+
+        if constexpr (Extendable) {
+            size_type saved_pos = pos_idx;
+            while (size_ + count > capacity_) {
+                grow();
+            }
+            pos_idx = saved_pos;
+        } else {
+            if (size_ + count > capacity_) {
+                if (capacity_ == 0) {
+                    return iterator(this, 0);
+                }
+
+                size_type overflow = size_ + count - capacity_;
+
+                size_type front_drop = std::min(overflow, pos_idx);
+                for (size_type i = 0; i < front_drop; i++) {
+                    alloc_traits::destroy(alloc_, data_ + head_);
+                    head_ = (head_ + 1) % capacity_;
+                    size_--;
+                }
+                pos_idx -= front_drop;
+                overflow -= front_drop;
+
+                for (size_type i = 0; i < overflow; i++) {
+                    first++;
+                }
+                count -= overflow;
+
+                if (count == 0) {
+                    return iterator(this, pos_idx);
+                }
+            }
+        }
+
+        size_type elements_after = size_ - pos_idx;
+        shift_right(pos_idx, count);
+
+        auto it = first;
+        for (size_type i = 0; i < count; i++) {
+            size_type idx = (head_ + pos_idx + i) % capacity_;
+            if (i < elements_after) {
+                data_[idx] = *it;
+            } else {
+                alloc_traits::construct(alloc_, data_ + idx, *it);
+            }
+            it++;
+        }
+
+        size_ += count;
+        return iterator(this, pos_idx);
+    }
+    iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
+        return insert(pos, ilist.begin(), ilist.end());
+    }
 
     iterator erase(const_iterator pos) {
         return erase(pos, pos + 1);
@@ -758,5 +874,26 @@ private:
         capacity_ = new_cap;
         head_ = 0;
         size_ = moved;
+    }
+
+    void shift_right(size_type pos_idx, size_type count) {
+        if (count == 0 || pos_idx == size_) {
+            return;
+        }
+
+        size_type elements_to_move = size_ - pos_idx;
+
+        for (size_type i = elements_to_move; i > 0; i--) {
+            size_type src_logical = pos_idx + i - 1;
+            size_type dst_logical = pos_idx + count + i - 1;
+            size_type src = (head_ + src_logical) % capacity_;
+            size_type dst = (head_ + dst_logical) % capacity_;
+
+            if (dst_logical >= size_) {
+                alloc_traits::construct(alloc_, data_ + dst, data_[src]);
+            } else {
+                data_[dst] = data_[src];
+            }
+        }
     }
 };
