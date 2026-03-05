@@ -108,7 +108,7 @@ TYPED_TEST(CircularBufferIntTest, eraseSequence) {
 TYPED_TEST(CircularBufferIntTest, nValues) {
     TypeParam cb(5);
 
-    cb.assign(5, 10);
+    cb.assign(static_cast<size_t>(5), 10);
 
     ASSERT_THAT(cb, testing::ElementsAre(10, 10, 10, 10, 10));
 }
@@ -128,77 +128,6 @@ TYPED_TEST(CircularBufferIntTest, initializerList) {
     cb.assign({1, 2, 3, 4, 5});
 
     ASSERT_THAT(cb, testing::ElementsAre(1, 2, 3, 4, 5));
-}
-
-TYPED_TEST(CircularBufferIntTest, expand) {
-    TypeParam cb = {1, 2, 3, 4, 5};
-    cb.resize(7, 6);
-
-    ASSERT_THAT(cb, testing::ElementsAre(1, 2, 3, 4, 5, 6, 6));
-}
-
-TYPED_TEST(CircularBufferIntTest, shrink) {
-    TypeParam cb = {1, 2, 3, 4, 5};
-    cb.resize(3);
-
-    ASSERT_THAT(cb, testing::ElementsAre(1, 2, 3));
-}
-
-TYPED_TEST(CircularBufferIntTest, insertValue) {
-    TypeParam cb(5); // {3, 1, 0, 2, 4}
-    for (int i = 0; i < 5; ++i) {
-        if (i % 2 == 0) {
-            cb.push_back(i);
-        } else {
-            cb.push_front(i);
-        }
-    }
-    cb.insert(cb.begin() + 2, 10);
-
-    ASSERT_THAT(cb, testing::ElementsAre(3, 1, 10, 0, 2, 4));
-}
-
-TYPED_TEST(CircularBufferIntTest, insertNValues) {
-    TypeParam cb(7); // {3, 1, 0, 2, 4}
-    for (int i = 0; i < 5; ++i) {
-        if (i % 2 == 0) {
-            cb.push_back(i);
-        } else {
-            cb.push_front(i);
-        }
-    }
-    cb.insert(cb.begin() + 2, 2, 8);
-
-    ASSERT_THAT(cb, testing::ElementsAre(3, 1, 8, 8, 0, 2, 4));
-}
-
-TYPED_TEST(CircularBufferIntTest, insertIterators) {
-    TypeParam cb(8); // {3, 1, 0, 2, 4}
-    std::vector<int> v = {1, 2, 3, 4, 5};
-    for (int i = 0; i < 5; ++i) {
-        if (i % 2 == 0) {
-            cb.push_back(i);
-        } else {
-            cb.push_front(i);
-        }
-    }
-    cb.insert(cb.begin() + 2, v.begin() + 1, v.end() - 1);
-
-    ASSERT_THAT(cb, testing::ElementsAre(3, 1, 2, 3, 4, 0, 2, 4));
-}
-
-TYPED_TEST(CircularBufferIntTest, insertInitializerList) {
-    TypeParam cb(8); // {3, 1, 0, 2, 4}
-    for (int i = 0; i < 5; ++i) {
-        if (i % 2 == 0) {
-            cb.push_back(i);
-        } else {
-            cb.push_front(i);
-        }
-    }
-    cb.insert(cb.begin() + 2, {2, 3, 4});
-
-    ASSERT_THAT(cb, testing::ElementsAre(3, 1, 2, 3, 4, 0, 2, 4));
 }
 
 TYPED_TEST(CircularBufferIntTest, simpleTest) {

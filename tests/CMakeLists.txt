@@ -16,7 +16,7 @@ enable_testing()
 
 # Option to enable extendable buffer tests
 # To run extendable buffer tests, set RUN_EXT_TESTS to ON and rebuild from scratch
-option(RUN_EXT_TESTS "Enable extendable buffer tests" OFF)
+option(RUN_EXT_TESTS "Enable extendable buffer tests" ON)
 
 add_executable(
     circular-buffer-lib-tests

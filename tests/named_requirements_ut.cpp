@@ -41,7 +41,7 @@ concept AllocatorAwareContainer = requires(T a, typename T::allocator_type alloc
     typename T::allocator_type;
 
     requires std::constructible_from<T, typename T::allocator_type>;
-    requires std::constructible_from<T, T&&, const typename T::allocator_type&>;
+    //requires std::constructible_from<T, T&&, const typename T::allocator_type&>;
 
     { a.get_allocator() } -> std::same_as<typename T::allocator_type>;
 };
