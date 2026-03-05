@@ -1,6 +1,9 @@
 #include <memory>
 #include <stdexcept>
 #include <algorithm>
+#include <initializer_list>
+#include <iterator>
+#include <cstddef>
 
 template<typename T, bool Extendable = false, typename Allocator = std::allocator<T>>
 class circular_buffer {
