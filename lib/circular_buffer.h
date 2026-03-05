@@ -717,7 +717,7 @@ public:
                 size_type idx = (head_ + i) % capacity_;
                 alloc_traits::destroy(alloc_, data_ + idx);
             }
-            
+
             size_ = new_size;
         } else if (new_size > size_) {
             if (new_size > capacity_) {
@@ -865,6 +865,10 @@ public:
         size_++;
     }
     void pop_back() {
+        if (empty()) {
+            throw std::out_of_range("pop_front on empty circular_buffer");
+        }
+
         size_type back_idx = (head_ + size_ - 1) % capacity_;
         alloc_traits::destroy(alloc_, data_ + back_idx);
         size_--;
@@ -888,9 +892,31 @@ public:
         size_++;
     }
     void pop_front() {
+        if (empty()) {
+            throw std::out_of_range("pop_back on empty circular_buffer");
+        }
+
         alloc_traits::destroy(alloc_, data_ + head_);
         head_ = (head_ + 1) % capacity_;
         size_--;
+    }
+
+    friend bool operator==(const circular_buffer& lhs, const circular_buffer& rhs) {
+        if (lhs.size_ != rhs.size_) {
+            return false;
+        }
+
+        for (size_type i = 0; i < lhs.size_; i++) {
+            if (!(lhs[i] == rhs[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    friend bool operator!=(const circular_buffer& lhs, const circular_buffer& rhs) {
+        return !(lhs == rhs);
     }
 
 private:
