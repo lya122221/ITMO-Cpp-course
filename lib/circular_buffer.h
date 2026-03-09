@@ -535,51 +535,13 @@ public:
             return iterator(this, pos_idx);
         }
 
-        if constexpr (Extendable) {
-            size_type saved_pos = pos_idx;
-            while (size_ + count > capacity_) {
-                grow();
-            }
-            pos_idx = saved_pos;
-        } else {
-            if (size_ + count > capacity_) {
-                if (capacity_ == 0) {
-                    return iterator(this, 0);
-                }
+        prepare_insert(pos_idx, count);
 
-                size_type overflow = size_ + count - capacity_;
-
-                size_type front_drop = std::min(overflow, pos_idx);
-                for (size_type i = 0; i < front_drop; i++) {
-                    alloc_traits::destroy(alloc_, data_ + head_);
-                    head_ = (head_ + 1) % capacity_;
-                    size_--;
-                }
-
-                pos_idx -= front_drop;
-                overflow -= front_drop;
-
-                count -= overflow;
-
-                if (count == 0) {
-                    return iterator(this, pos_idx);
-                }
-            }
+        if (count == 0) {
+            return iterator(this, pos_idx);
         }
 
-        size_type elements_after = size_ - pos_idx;
-        shift_right(pos_idx, count);
-
-        for (size_type i = 0; i < count; i++) {
-            size_type idx = (head_ + pos_idx + i) % capacity_;
-            if (i < elements_after) {
-                data_[idx] = value;
-            } else {
-                alloc_traits::construct(alloc_, data_ + idx, value);
-            }
-        }
-
-        size_ += count;
+        insert_fill_range(pos_idx, count, value);
         return iterator(this, pos_idx);
     }
     template<typename InputIt, typename = std::void_t<typename std::iterator_traits<InputIt>::iterator_category>>
@@ -591,55 +553,12 @@ public:
             return iterator(this, pos_idx);
         }
 
-        if constexpr (Extendable) {
-            size_type saved_pos = pos_idx;
-            while (size_ + count > capacity_) {
-                grow();
-            }
-            pos_idx = saved_pos;
-        } else {
-            if (size_ + count > capacity_) {
-                if (capacity_ == 0) {
-                    return iterator(this, 0);
-                }
-
-                size_type overflow = size_ + count - capacity_;
-
-                size_type front_drop = std::min(overflow, pos_idx);
-                for (size_type i = 0; i < front_drop; i++) {
-                    alloc_traits::destroy(alloc_, data_ + head_);
-                    head_ = (head_ + 1) % capacity_;
-                    size_--;
-                }
-                pos_idx -= front_drop;
-                overflow -= front_drop;
-
-                for (size_type i = 0; i < overflow; i++) {
-                    first++;
-                }
-                count -= overflow;
-
-                if (count == 0) {
-                    return iterator(this, pos_idx);
-                }
-            }
+        prepare_insert(pos_idx, count);
+        if (count == 0) {
+            return iterator(this, pos_idx);
         }
 
-        size_type elements_after = size_ - pos_idx;
-        shift_right(pos_idx, count);
-
-        auto it = first;
-        for (size_type i = 0; i < count; i++) {
-            size_type idx = (head_ + pos_idx + i) % capacity_;
-            if (i < elements_after) {
-                data_[idx] = *it;
-            } else {
-                alloc_traits::construct(alloc_, data_ + idx, *it);
-            }
-            it++;
-        }
-
-        size_ += count;
+        insert_copy_range(pos_idx, count, first);
         return iterator(this, pos_idx);
     }
     iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
@@ -658,18 +577,8 @@ public:
         size_type last_idx = last.index_;
         size_type count = last_idx - first_idx;
 
-        size_type elements_after = size_ - last_idx;
-        for (size_type i = 0; i < elements_after; i++) {
-            size_type dst = (head_ + first_idx + i) % capacity_;
-            size_type src = (head_ + last_idx + i) % capacity_;
-            data_[dst] = data_[src];
-        }
-
-        for (size_type i = 0; i < count; i++) {
-            size_type idx = (head_ + size_ - 1 - i) % capacity_;
-            alloc_traits::destroy(alloc_, data_ + idx);
-        }
-
+        shift_left(first_idx, last_idx);
+        destroy_trailing_elements(count);
         size_ -= count;
 
         return iterator(this, first_idx);
@@ -686,60 +595,22 @@ public:
 
     void resize(size_type new_size) {
         if (new_size < size_) {
-            for (size_type i = new_size; i < size_; i++) {
-                size_type idx = (head_ + i) % capacity_;
-                alloc_traits::destroy(alloc_, data_ + idx);
-            }
-
+            destroy_from(new_size);
             size_ = new_size;
         } else if (new_size > size_) {
-            if (new_size > capacity_) {
-                if constexpr (Extendable) {
-                    while (new_size > capacity_) {
-                        grow();
-                    }
-                } else {
-                    throw std::out_of_range("resizing a non-expandable buffer");
-                }
-            }
-
-            size_type constructed = size_;
-            for (size_type i = size_; i < new_size; i++) {
-                size_type idx = (head_ + i) % capacity_;
-                alloc_traits::construct(alloc_, data_ + idx);
-                constructed++;
-            }
-
+            ensure_capacity_for_resize(new_size);
+            construct_default_range(size_, new_size);
             size_ = new_size;
         }
     }
 
     void resize(size_type new_size, const T& value) {
         if (new_size < size_) {
-            for (size_type i = new_size; i < size_; i++) {
-                size_type idx = (head_ + i) % capacity_;
-                alloc_traits::destroy(alloc_, data_ + idx);
-            }
-
+            destroy_from(new_size);
             size_ = new_size;
         } else if (new_size > size_) {
-            if (new_size > capacity_) {
-                if constexpr (Extendable) {
-                    while (new_size > capacity_) {
-                        grow();
-                    }
-                } else {
-                    throw std::out_of_range("resizing a non-expandable buffer");
-                }
-            }
-
-            size_type constructed = size_;
-            for (size_type i = size_; i < new_size; i++) {
-                size_type idx = (head_ + i) % capacity_;
-                alloc_traits::construct(alloc_, data_ + idx, value);
-                constructed++;
-            }
-
+            ensure_capacity_for_resize(new_size);
+            construct_value_range(size_, new_size, value);
             size_ = new_size;
         }
     }
@@ -769,47 +640,9 @@ public:
         size_type count = static_cast<size_type>(std::distance(first, last));
 
         if constexpr (Extendable) {
-            if (count > capacity_) {
-                reallocate(count);
-            } else {
-                destroy_all();
-            }
-
-            size_type constructed = 0;
-
-            for (auto it = first; it != last; it++) {
-                alloc_traits::construct(alloc_, data_ + constructed, *it);
-                constructed++;
-            }
-
-            size_ = count;
+            assign_extendable(first, last, count);
         } else {
-            destroy_all();
-
-            if (count > capacity_) {
-                size_type skip = count - capacity_;
-                auto it = first;
-                for (size_type i = 0; i < skip; i++) {
-                    it++;
-                }
-
-                size_type constructed = 0;
-                while (it != last) {
-                    alloc_traits::construct(alloc_, data_ + constructed, *it);
-                    constructed++;
-                    it++;
-                }
-
-                size_ = capacity_;
-            } else {
-                size_type constructed = 0;
-                for (auto it = first; it != last; it++) {
-                    alloc_traits::construct(alloc_, data_ + constructed, *it);
-                    constructed++;
-                }
-
-                size_ = count;
-            }
+            assign_non_extendable(first, last, count);
         }
     }
     void assign(std::initializer_list<T> ilist) {
@@ -856,9 +689,7 @@ public:
             if constexpr (Extendable) {
                 grow();
             } else {
-                alloc_traits::destroy(alloc_, data_ + head_);
-                alloc_traits::construct(alloc_, data_ + head_, value);
-                head_ = (head_ + 1) % capacity_;
+                overwrite_front_on_full(value);
                 return;
             }
         }
@@ -881,11 +712,7 @@ public:
             if constexpr (Extendable) {
                 grow();
             } else {
-                size_type back_idx = (head_ + size_ - 1) % capacity_;
-                alloc_traits::destroy(alloc_, data_ + back_idx);
-                head_ = (head_ == 0) ? capacity_ - 1 : head_ - 1;
-                alloc_traits::construct(alloc_, data_ + head_, value);
-
+                overwrite_back_on_full(value);
                 return;
             }
         }
@@ -993,6 +820,173 @@ private:
             } else {
                 data_[dst] = data_[src];
             }
+        }
+    }
+
+    void prepare_insert(size_type& pos_idx, size_type& count) {
+        if constexpr (Extendable) {
+            size_type saved_pos = pos_idx;
+            while (size_ + count > capacity_) {
+                grow();
+            }
+            pos_idx = saved_pos;
+        } else {
+            if (size_ + count > capacity_) {
+                if (capacity_ == 0) {
+                    pos_idx = 0;
+                    count = 0;
+                    return;
+                }
+
+                size_type overflow = size_ + count - capacity_;
+
+                size_type front_drop = std::min(overflow, pos_idx);
+                for (size_type i = 0; i < front_drop; i++) {
+                    alloc_traits::destroy(alloc_, data_ + head_);
+                    head_ = (head_ + 1) % capacity_;
+                    size_--;
+                }
+
+                pos_idx -= front_drop;
+                overflow -= front_drop;
+
+                count -= overflow;
+            }
+        }
+    }
+
+    void insert_fill_range(size_type pos_idx, size_type count, const T& value) {
+        size_type elements_after = size_ - pos_idx;
+        shift_right(pos_idx, count);
+        for (size_type i = 0; i < count; i++) {
+            size_type idx = (head_ + pos_idx + i) % capacity_;
+            if (i < elements_after) {
+                data_[idx] = value;
+            } else {
+                alloc_traits::construct(alloc_, data_ + idx, value);
+            }
+        }
+        size_ += count;
+    }
+
+    template<typename InputIt>
+    void insert_copy_range(size_type pos_idx, size_type count, InputIt first) {
+        size_type elements_after = size_ - pos_idx;
+        shift_right(pos_idx, count);
+        auto it = first;
+        for (size_type i = 0; i < count; ++i) {
+            size_type idx = (head_ + pos_idx + i) % capacity_;
+            if (i < elements_after) {
+                data_[idx] = *it;
+            } else {
+                alloc_traits::construct(alloc_, data_ + idx, *it);
+            }
+            ++it;
+        }
+        size_ += count;
+    }
+
+    void shift_left(size_type first_idx, size_type last_idx) {
+        size_type count = last_idx - first_idx;
+        size_type elements_after = size_ - last_idx;
+        for (size_type i = 0; i < elements_after; i++) {
+            size_type dst = (head_ + first_idx + i) % capacity_;
+            size_type src = (head_ + last_idx + i) % capacity_;
+            data_[dst] = data_[src];
+        }
+    }
+
+    void destroy_trailing_elements(size_type count) {
+        for (size_type i = 0; i < count; i++) {
+            size_type idx = (head_ + size_ - 1 - i) % capacity_;
+            alloc_traits::destroy(alloc_, data_ + idx);
+        }
+    }
+
+    template<typename InputIt>
+    void assign_extendable(InputIt first, InputIt last, size_type count) {
+        if (count > capacity_) {
+            reallocate(count);
+        } else {
+            destroy_all();
+        }
+        size_type constructed = 0;
+        for (auto it = first; it != last; ++it) {
+            alloc_traits::construct(alloc_, data_ + constructed, *it);
+            ++constructed;
+        }
+        size_ = count;
+    }
+
+    template<typename InputIt>
+    void assign_non_extendable(InputIt first, InputIt last, size_type count) {
+        destroy_all();
+        if (count > capacity_) {
+            size_type skip = count - capacity_;
+            auto it = first;
+            for (size_type i = 0; i < skip; ++i) {
+                ++it;
+            }
+            size_type constructed = 0;
+            while (it != last) {
+                alloc_traits::construct(alloc_, data_ + constructed, *it);
+                ++constructed;
+                ++it;
+            }
+            size_ = capacity_;
+        } else {
+            size_type constructed = 0;
+            for (auto it = first; it != last; ++it) {
+                alloc_traits::construct(alloc_, data_ + constructed, *it);
+                ++constructed;
+            }
+            size_ = count;
+        }
+    }
+
+    void overwrite_front_on_full(const T& value) {
+        alloc_traits::destroy(alloc_, data_ + head_);
+        alloc_traits::construct(alloc_, data_ + head_, value);
+        head_ = (head_ + 1) % capacity_;
+    }
+
+    void overwrite_back_on_full(const T& value) {
+        size_type back_idx = (head_ + size_ - 1) % capacity_;
+        alloc_traits::destroy(alloc_, data_ + back_idx);
+        head_ = (head_ == 0) ? capacity_ - 1 : head_ - 1;
+        alloc_traits::construct(alloc_, data_ + head_, value);
+    }
+
+    void destroy_from(size_type start) {
+        for (size_type i = start; i < size_; i++) {
+            size_type idx = (head_ + i) % capacity_;
+            alloc_traits::destroy(alloc_, data_ + idx);
+        }
+    }
+
+    void ensure_capacity_for_resize(size_type new_size) {
+        if (new_size > capacity_) {
+            if constexpr (Extendable) {
+                while (new_size > capacity_) {
+                    grow();
+                }
+            } else {
+                throw std::out_of_range("resizing a non-expandable buffer");
+            }
+        }
+    }
+
+    void construct_default_range(size_type start, size_type end) {
+        for (size_type i = start; i < end; i++) {
+            size_type idx = (head_ + i) % capacity_;
+            alloc_traits::construct(alloc_, data_ + idx);
+        }
+    }
+
+    void construct_value_range(size_type start, size_type end, const T& value) {
+        for (size_type i = start; i < end; i++) {
+            size_type idx = (head_ + i) % capacity_;
+            alloc_traits::construct(alloc_, data_ + idx, value);
         }
     }
 };
