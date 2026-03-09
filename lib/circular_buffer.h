@@ -18,11 +18,21 @@ public:
 
     circular_buffer() : circular_buffer(0) {}
     explicit circular_buffer(const Allocator& alloc) : circular_buffer(0, alloc) {}
-    circular_buffer(size_type capacity, const Allocator& alloc = Allocator()) 
+    explicit circular_buffer(size_type capacity) 
+                           : data_(nullptr), 
+                             capacity_(capacity), 
+                             size_(0), head_(0), 
+                             alloc_()
+    {
+        if (capacity > 0) {
+            data_ = alloc_traits::allocate(alloc_, capacity_);
+        }
+    }
+    circular_buffer(size_type capacity, const Allocator& alloc) 
                   : data_(nullptr), 
                     capacity_(capacity), 
                     size_(0), head_(0), 
-                    alloc_(alloc)  
+                    alloc_(alloc)
     {
         if (capacity > 0) {
             data_ = alloc_traits::allocate(alloc_, capacity_);
