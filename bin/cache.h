@@ -24,4 +24,7 @@ private:
     std::string file_path_;
     std::list<CacheEntry> cache_;
     int64_t ttl_seconds_;
+
+    void load_file_();
+    void save_to_file_();
 };
