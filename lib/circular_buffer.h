@@ -47,11 +47,18 @@ public:
     {
         if (capacity_ > 0) {
             data_ = alloc_traits::allocate(alloc_, capacity_);
-
-            for (size_type index = 0; index < other.size_; index++) {
-                size_type other_index = (other.head_ + index) % other.capacity_;
-                alloc_traits::construct(alloc_, data_ + index, other.data_[other_index]);
-                size_++;
+            try {
+                for (size_type index = 0; index < other.size_; index++) {
+                    size_type other_index = (other.head_ + index) % other.capacity_;
+                    alloc_traits::construct(alloc_, data_ + index, other.data_[other_index]);
+                    size_++;
+                }
+            } catch (...) {
+                for (size_type i = 0; i < size_; i++) {
+                    alloc_traits::destroy(alloc_, data_ + i);
+                }
+                alloc_traits::deallocate(alloc_, data_, capacity_);
+                throw;
             }
         }
     }
@@ -794,11 +801,19 @@ private:
         size_type new_cap = (capacity_ == 0) ? 1 : capacity_ * 2;
         pointer new_data = alloc_traits::allocate(alloc_, new_cap);
 
-        size_type moved = 0;
-        for (size_type i = 0; i < size_; i++) {
-            size_type old_idx = (head_ + i) % capacity_;
-            alloc_traits::construct(alloc_, new_data + i, data_[old_idx]);
-            moved++;
+        size_type constructed = 0;
+        try {
+            for (size_type i = 0; i < size_; i++) {
+                size_type old_idx = (head_ + i) % capacity_;
+                alloc_traits::construct(alloc_, new_data + i, data_[old_idx]);
+                constructed++;
+            }
+        } catch (...) {
+            for (size_type i = 0; i < constructed; i++) {
+                alloc_traits::destroy(alloc_, new_data + i);
+            }
+            alloc_traits::deallocate(alloc_, new_data, new_cap);
+            throw;
         }
 
         destroy_all();
@@ -809,7 +824,7 @@ private:
         data_ = new_data;
         capacity_ = new_cap;
         head_ = 0;
-        size_ = moved;
+        size_ = constructed;
     }
 
     void shift_right(size_type pos_idx, size_type count) {
