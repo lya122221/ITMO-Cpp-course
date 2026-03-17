@@ -18,13 +18,15 @@ struct CacheEntry {
 
 class Cache {
 public:
-    std::optional<Data> Get(const std::string& key);
-    void Put(std::string key, const CacheEntry& value);
+    std::optional<Data> Get(const std::string& from_code, const std::string& to_code, const std::string& date);
+    void Put(const Data& data);
 private:
     std::string file_path_;
     std::list<CacheEntry> cache_;
+    size_t max_cache_size_;
     int64_t ttl_seconds_;
 
-    void load_file_();
-    void save_to_file_();
+    bool load_file_();
+    bool save_to_file_();
+    std::string make_key_(const std::string& from_code, const std::string& to_code, const std::string& date) const;
 };
