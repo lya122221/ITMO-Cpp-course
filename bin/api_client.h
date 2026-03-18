@@ -4,7 +4,7 @@
 
 class APIClient {
 public:
-  Data GetDataFromRequest(const std::string& from_code, const std::string& to_code, const std::string& date);
+  std::optional<Data> GetDataFromRequest(const Request& request);
 private:
-  std::string api_key;
+  std::string api_key_;
 };

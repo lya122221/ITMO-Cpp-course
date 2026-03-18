@@ -4,15 +4,9 @@
 #include "model.h"
 #include <string>
 
-struct Request {
-  std::string from_code;
-  std::string to_code;
-  std::string date;
-};
-
 class RequestsHandler {
 public:
-  void HandleRequests();
+  bool HandleRequests();
 private:
   APIClient api_client_;
   Cache cache_;
@@ -20,5 +14,5 @@ private:
 
   Request get_request_();
   bool continue_running_or_not_();
-  void print_result_(const Data& data);
+  void print_result_(const Data& data) const;
 };

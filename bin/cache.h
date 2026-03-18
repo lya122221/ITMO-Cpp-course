@@ -18,7 +18,7 @@ struct CacheEntry {
 
 class Cache {
 public:
-    std::optional<Data> Get(const std::string& from_code, const std::string& to_code, const std::string& date);
+    std::optional<Data> Get(const Request& request);
     void Put(const Data& data);
 private:
     std::string file_path_;
@@ -28,5 +28,5 @@ private:
 
     bool load_file_();
     bool save_to_file_();
-    std::string make_key_(const std::string& from_code, const std::string& to_code, const std::string& date) const;
+    std::string make_key_(const Request& request) const;
 };

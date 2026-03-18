@@ -37,12 +37,12 @@ bool Cache::save_to_file_() {
   file << entries.dump();
 }
 
-std::string Cache::make_key_(const std::string& from_code, const std::string& to_code, const std::string& date) const {
-  return from_code + " " + to_code + " " + date;
+std::string Cache::make_key_(const Request& request) const {
+  return request.from_code + " " + request.to_code + " " + request.date;
 }
 
-std::optional<Data> Cache::Get(const std::string& from_code, const std::string& to_code, const std::string& date) {
-  std::string key = make_key_(from_code, to_code, date);
+std::optional<Data> Cache::Get(const Request& request) {
+  std::string key = make_key_(request);
 
   for (auto it = cache_.begin(); it != cache_.end(); it++) {
     if (it->key == key) {
@@ -55,7 +55,7 @@ std::optional<Data> Cache::Get(const std::string& from_code, const std::string& 
 }
 
 void Cache::Put(const Data& data) {
-  std::string key = make_key_(data.from_code, data.to_code, data.date);
+  std::string key = make_key_({ data.from_code, data.to_code, data.date });
   auto now = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
   cache_.push_front({ key, data, now });

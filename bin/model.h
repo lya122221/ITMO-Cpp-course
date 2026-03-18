@@ -3,6 +3,12 @@
 #include <chrono>
 #include <vector>
 
+struct Request {
+  std::string from_code;
+  std::string to_code;
+  std::string date;
+};
+
 struct Segment {
   std::string transport_type;
   std::string number;

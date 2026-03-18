@@ -1,6 +1,7 @@
 #include "requests_handler.h"
 #include <iostream>
 
+// TODO: validate request
 Request RequestsHandler::get_request_() {
   std::string from_code;
   std::cout << "Enter the departure city code. For St. Petersburg enter \"c2\": ";
@@ -34,11 +35,22 @@ bool RequestsHandler::continue_running_or_not_() {
   }
 }
 
-void RequestsHandler::HandleRequests() {
+bool RequestsHandler::HandleRequests() {
   while (true) {
     request_ = get_request_();
 
-    // TODO: request processing
+    std::optional<Data> data_opt = cache_.Get(request_);
+    if (data_opt == std::nullopt) {
+      std::optional<Data> data_opt = api_client_.GetDataFromRequest(request_);
+      if (data_opt == std::nullopt) {
+        return false;
+      }
+      Data data = data_opt.value();
+      cache_.Put(data);
+      print_result_(data);
+    } else {
+      print_result_(data_opt.value());
+    }
 
     if (!continue_running_or_not_()) {
       break;
