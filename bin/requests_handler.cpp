@@ -41,10 +41,11 @@ bool RequestsHandler::HandleRequests() {
 
     std::optional<Data> data_opt = cache_.Get(request_);
     if (data_opt == std::nullopt) {
-      std::optional<Data> data_opt = api_client_.GetDataFromRequest(request_);
+      data_opt = api_client_.GetDataFromRequest(request_);
       if (data_opt == std::nullopt) {
         return false;
       }
+
       Data data = data_opt.value();
       cache_.Put(data);
       print_result_(data);
@@ -53,7 +54,7 @@ bool RequestsHandler::HandleRequests() {
     }
 
     if (!continue_running_or_not_()) {
-      break;
+      return true;
     }
   }
 }
