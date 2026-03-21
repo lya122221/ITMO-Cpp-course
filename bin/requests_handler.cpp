@@ -58,3 +58,63 @@ bool RequestsHandler::HandleRequests() {
     }
   }
 }
+
+void RequestsHandler::print_result_(const Data& data) const {
+  std::cout << "══════════════════════════════════════════════\n";
+  std::cout << "  " << data.from_city << " → " << data.to_city << "\n";
+  std::cout << "  Дата: " << data.date << "\n";
+  std::cout << "  Найдено маршрутов: " << data.total << "\n";
+  std::cout << "══════════════════════════════════════════════\n\n";
+
+  for (size_t i = 0; i < data.routes.size(); ++i) {
+    const Route& route = data.routes[i];
+
+    std::cout << "── Маршрут " << (i + 1) << " ──";
+    if (route.has_transfers) {
+      std::cout << " [с пересадкой в " << route.transfer_city << "]";
+    }
+    std::cout << "\n";
+
+    std::cout << "  Отправление: " << route.departure << "\n";
+    std::cout << "  Прибытие:    " << route.arrival << "\n";
+
+    if (route.has_transfers) {
+      int hours = static_cast<int>(route.transfer_duration) / 3600;
+      int mins  = (static_cast<int>(route.transfer_duration) % 3600) / 60;
+      std::cout << "  Пересадка:   " << hours << "ч " << mins << "мин\n";
+    }
+
+    for (size_t s = 0; s < route.segments.size(); ++s) {
+      const Segment& seg = route.segments[s];
+
+      std::cout << "\n";
+      if (route.segments.size() > 1) {
+        std::cout << "    Сегмент " << (s + 1) << ":\n";
+      }
+
+      std::cout << "    Рейс:       " << seg.number;
+      if (!seg.title.empty()) {
+        std::cout << " (" << seg.title << ")";
+      }
+      std::cout << "\n";
+
+      std::cout << "    Тип:        " << seg.transport_type << "\n";
+      std::cout << "    Перевозчик: " << seg.carrier << "\n";
+
+      if (!seg.vehicle.empty()) {
+        std::cout << "    Транспорт:  " << seg.vehicle << "\n";
+      }
+
+      std::cout << "    Откуда:     " << seg.from_station << "\n";
+      std::cout << "    Куда:       " << seg.to_station << "\n";
+      std::cout << "    Отправл.:   " << seg.departure << "\n";
+      std::cout << "    Прибытие:   " << seg.arrival << "\n";
+
+      int hours = static_cast<int>(seg.duration) / 3600;
+      int mins  = (static_cast<int>(seg.duration) % 3600) / 60;
+      std::cout << "    В пути:     " << hours << "ч " << mins << "мин\n";
+    }
+
+    std::cout << "\n";
+  }
+}

@@ -4,10 +4,15 @@
 #include <vector>
 #include <iostream>
 
-bool Cache::load_file_() {
+void Cache::load_file_() {
   std::ifstream file(file_path_);
   if (!file) {
-    return false;
+    std::ofstream new_file(file_path_);
+    if (!new_file) {
+      throw std::runtime_error("Cannot create cache file");
+    }
+    new_file << "[]";
+    return; 
   }
 
   try {
@@ -21,10 +26,11 @@ bool Cache::load_file_() {
     }
   } catch (const json::exception& e){
     std::cerr << "Cache load error: " << e.what() << std::endl;
+    return;
   }
 }
 
-bool Cache::save_to_file_() {
+void Cache::save_to_file_() {
   json entries = json::array();
   
   for (CacheEntry entry : cache_) {
@@ -63,4 +69,12 @@ void Cache::Put(const Data& data) {
   while (cache_.size() > max_cache_size_) {
     cache_.pop_back();
   }
+}
+
+Cache::Cache(size_t max_cache_size, int64_t ttl_seconds) : max_cache_size_(max_cache_size), ttl_seconds_(ttl_seconds), file_path_(std::filesystem::temp_directory_path() / "routes_cache.json") {
+  load_file_();
+}
+
+Cache::~Cache() {
+  save_to_file_();
 }

@@ -6,6 +6,8 @@
 
 class RequestsHandler {
 public:
+  RequestsHandler(const Config& config) : api_client_(config.api_key), cache_(config.max_cache_size, config.ttl_seconds) {}
+  
   bool HandleRequests();
 private:
   APIClient api_client_;

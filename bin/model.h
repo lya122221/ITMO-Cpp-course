@@ -40,3 +40,10 @@ struct Data {
   std::vector<Route> routes;
   int total = 0;
 };
+
+
+struct Config {
+  std::string api_key;
+  size_t max_cache_size;
+  int64_t ttl_seconds;
+};

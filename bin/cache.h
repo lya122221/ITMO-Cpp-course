@@ -4,6 +4,7 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 #include "model.h"
+#include <chrono>
 
 struct CacheEntry {
     std::string key;
@@ -18,6 +19,9 @@ struct CacheEntry {
 
 class Cache {
 public:
+    Cache(size_t max_cache_size, int64_t ttl_seconds);
+    ~Cache();
+
     std::optional<Data> Get(const Request& request);
     void Put(const Data& data);
 private:
@@ -26,7 +30,7 @@ private:
     size_t max_cache_size_;
     int64_t ttl_seconds_;
 
-    bool load_file_();
-    bool save_to_file_();
+    void load_file_();
+    void save_to_file_();
     std::string make_key_(const Request& request) const;
 };
