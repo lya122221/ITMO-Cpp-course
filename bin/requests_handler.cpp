@@ -1,15 +1,19 @@
 #include "requests_handler.h"
 #include <iostream>
+#include <limits>
+#include <optional>
 
-// TODO: validate request
 Request RequestsHandler::get_request_() {
-  std::string from_code;
-  std::cout << "Enter the departure city code. For St. Petersburg enter \"c2\": ";
-  std::cin >> from_code;
+  std::string from_city;
+  std::cout << "Enter the departure city: ";
+  std::cin >> from_city;
 
-  std::string to_code;
-  std::cout << "Enter the arrival city code: ";
-  std::cin >> to_code;
+  std::string to_city;
+  std::cout << "Enter the arrival city: ";
+  std::cin >> to_city;
+
+  std::string from_code = api_client_.GetCityCode(from_city);
+  std::string to_code = api_client_.GetCityCode(to_city);
 
   std::string date;
   std::cout << "Enter departure date (format: YYYY-MM-DD): ";
