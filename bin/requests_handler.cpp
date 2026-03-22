@@ -1,7 +1,19 @@
 #include "requests_handler.h"
+#include <cmath>
 #include <iostream>
 #include <limits>
 #include <optional>
+
+int RequestsHandler::safe_seconds_for_display_(double seconds) const {
+  if (!std::isfinite(seconds) || seconds < 0.0) {
+    return 0;
+  }
+  const double kMax = 1e9;
+  if (seconds > kMax) {
+    return static_cast<int>(kMax);
+  }
+  return static_cast<int>(seconds);
+}
 
 Request RequestsHandler::get_request_() {
   std::string from_city;
@@ -83,8 +95,9 @@ void RequestsHandler::print_result_(const Data& data) const {
     std::cout << "  Прибытие:    " << route.arrival << "\n";
 
     if (route.has_transfers) {
-      int hours = static_cast<int>(route.transfer_duration) / 3600;
-      int mins  = (static_cast<int>(route.transfer_duration) % 3600) / 60;
+      int td = safe_seconds_for_display_(route.transfer_duration);
+      int hours = td / 3600;
+      int mins = (td % 3600) / 60;
       std::cout << "  Пересадка:   " << hours << "ч " << mins << "мин\n";
     }
 
@@ -114,8 +127,9 @@ void RequestsHandler::print_result_(const Data& data) const {
       std::cout << "    Отправл.:   " << seg.departure << "\n";
       std::cout << "    Прибытие:   " << seg.arrival << "\n";
 
-      int hours = static_cast<int>(seg.duration) / 3600;
-      int mins  = (static_cast<int>(seg.duration) % 3600) / 60;
+      int dur = safe_seconds_for_display_(seg.duration);
+      int hours = dur / 3600;
+      int mins = (dur % 3600) / 60;
       std::cout << "    В пути:     " << hours << "ч " << mins << "мин\n";
     }
 
