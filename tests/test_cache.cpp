@@ -186,3 +186,33 @@ TEST_F(CacheTest, ConstructorWithCustomPath) {
   EXPECT_TRUE(j.is_array());
   EXPECT_EQ(j.size(), 1);
 }
+
+TEST_F(CacheTest, LoadCacheFromCorruptedFile_CreatesNewFile) {
+  std::ofstream file(test_file_);
+  file << "NOT A JSON";
+  file.close();
+
+  Cache cache(10, 3600, test_file_);
+  Request req{"c_A", "c_B", "2025-01-01"};
+  EXPECT_FALSE(cache.Get(req).has_value());
+
+  std::ifstream new_file(test_file_);
+  json j = json::parse(new_file);
+  EXPECT_TRUE(j.is_array());
+  EXPECT_EQ(j.size(), 0);
+}
+
+TEST_F(CacheTest, SaveOnlyNonExpiredEntries) {
+  {
+    Cache cache(10, 1, test_file_);
+    Data d1 = make_data("A", "B", "2025-01-01");
+    Data d2 = make_data("C", "D", "2025-01-02");
+    cache.Put(d1);
+    cache.Put(d2);
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+  }
+
+  Cache cache2(10, 3600, test_file_);
+  EXPECT_FALSE(cache2.Get({"c_A", "c_B", "2025-01-01"}).has_value());
+  EXPECT_FALSE(cache2.Get({"c_C", "c_D", "2025-01-02"}).has_value());
+}

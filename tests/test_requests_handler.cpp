@@ -218,7 +218,7 @@ TEST(HandleRequestsTest, PrintRouteWithInvalidDuration) {
     Route route;
     route.has_transfers = true;
     route.transfer_city = "Нижний Новгород";
-    route.transfer_duration = -7200;  // отрицательное значение
+    route.transfer_duration = -7200;
     route.departure = "2025-01-15T10:00:00+03:00";
     route.arrival = "2025-01-15T15:00:00+03:00";
 
@@ -236,4 +236,20 @@ TEST(HandleRequestsTest, PrintRouteWithInvalidDuration) {
 
     RequestsHandler handler(mock_api, mock_cache);
     EXPECT_TRUE(handler.HandleRequests());
+}
+
+TEST(HandleRequestsTest, GetCityCodeThrows_ReturnsFalse) {
+    MockAPIClient mock_api;
+    MockCache mock_cache;
+
+    CinRedirect cin("Москва\nКазань\n2025-01-15\n");
+    CoutSilencer silence;
+
+    EXPECT_CALL(mock_api, GetCityCode("Москва")).WillOnce(testing::Throw(std::runtime_error("City not found")));
+    EXPECT_CALL(mock_api, GetCityCode("Казань")).Times(0);
+    EXPECT_CALL(mock_cache, Get(_)).Times(0);
+    EXPECT_CALL(mock_api, GetDataFromRequest(_)).Times(0);
+
+    RequestsHandler handler(mock_api, mock_cache);
+    EXPECT_FALSE(handler.HandleRequests());
 }

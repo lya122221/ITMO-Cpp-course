@@ -56,3 +56,11 @@ TEST_F(APIClientTest, GetCityCode_ThrowsWhenCityNotFound) {
     APIClient client("dummy_key", test_file_);
     EXPECT_THROW(client.GetCityCode("Москва"), std::runtime_error);
 }
+
+TEST_F(APIClientTest, LoadCitiesFromCorruptedFile_Recreates) {
+    std::ofstream file(test_file_);
+    file << "NOT A JSON";
+    file.close();
+
+    EXPECT_THROW(APIClient client("dummy_key", test_file_), std::exception);
+}

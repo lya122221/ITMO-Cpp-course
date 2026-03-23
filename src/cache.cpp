@@ -29,6 +29,11 @@ void Cache::load_file_() {
     }
   } catch (const json::exception& e){
     std::cerr << "Cache load error: " << e.what() << std::endl;
+    std::ofstream new_file(file_path_);
+    if (!new_file) {
+      throw std::runtime_error("Cannot create cache file");
+    }
+    new_file << "[]";
     return;
   }
 }

@@ -53,7 +53,12 @@ bool RequestsHandler::continue_running_or_not_() {
 
 bool RequestsHandler::HandleRequests() {
   while (true) {
-    request_ = get_request_();
+    try {
+      request_ = get_request_();
+    } catch (const std::exception& e) {
+      std::cerr << "Error getting request: " << e.what() << std::endl;
+      return false;
+    }
 
     std::optional<Data> data_opt = cache_.Get(request_);
     if (data_opt == std::nullopt) {
