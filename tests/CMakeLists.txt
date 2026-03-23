@@ -10,6 +10,7 @@ include(GoogleTest)
 add_executable(run_tests
     test_cache.cpp
     test_requests_handler.cpp
+    test_api_client.cpp
 )
 target_include_directories(run_tests PRIVATE ${CMAKE_SOURCE_DIR}/include ${CMAKE_SOURCE_DIR}/tests)
 target_link_libraries(run_tests PRIVATE routes_lib GTest::gtest_main GTest::gmock)

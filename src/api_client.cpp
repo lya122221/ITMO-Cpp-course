@@ -131,3 +131,12 @@ void APIClient::load_cities_file_() {
     return;
   }
 }
+
+APIClient::APIClient(const std::string& api_key, const std::string& cities_path)
+    : api_key_(api_key), cities_path_(cities_path) {
+    load_cities_file_();
+}
+
+std::vector<Route> APIClient::ValidateRoutes(const std::vector<Route>& routes) {
+    return validate_routes_(routes);
+}

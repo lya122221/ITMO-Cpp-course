@@ -172,3 +172,17 @@ TEST_F(CacheTest, HandlesEmptyFile) {
   Request req{"c_A", "c_B", "2025-01-01"};
   EXPECT_FALSE(cache.Get(req).has_value());
 }
+
+TEST_F(CacheTest, ConstructorWithCustomPath) {
+  {
+    Cache cache(10, 3600, test_file_);
+    Data data = make_data("A", "B", "2025-01-01");
+    cache.Put(data);
+  }
+
+  std::ifstream file(test_file_);
+  ASSERT_TRUE(file.good());
+  json j = json::parse(file);
+  EXPECT_TRUE(j.is_array());
+  EXPECT_EQ(j.size(), 1);
+}

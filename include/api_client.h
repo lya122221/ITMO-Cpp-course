@@ -11,6 +11,9 @@ using json = nlohmann::json;
 class APIClient : public IAPIClient {
 public:
   APIClient(const std::string& api_key);
+  APIClient(const std::string& api_key, const std::string& cities_path);
+  
+  std::vector<Route> ValidateRoutes(const std::vector<Route>& routes);
 
   std::optional<Data> GetDataFromRequest(const Request& request) override;
 

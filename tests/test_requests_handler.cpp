@@ -144,3 +144,96 @@ TEST(HandleRequestsTest, UnknownCity_EmptyCode_APIFails) {
   RequestsHandler handler(mock_api, mock_cache);
   EXPECT_FALSE(handler.HandleRequests());
 }
+
+TEST(HandleRequestsTest, PrintRouteWithTransfer) {
+    MockAPIClient mock_api;
+    MockCache mock_cache;
+
+    Data data;
+    data.from_city = "Москва";
+    data.from_code = "c213";
+    data.to_city = "Казань";
+    data.to_code = "c43";
+    data.date = "2025-01-15";
+    data.total = 1;
+
+    Route route;
+    route.has_transfers = true;
+    route.transfer_city = "Нижний Новгород";
+    route.transfer_duration = 7200;
+    route.departure = "2025-01-15T10:00:00+03:00";
+    route.arrival = "2025-01-15T15:00:00+03:00";
+
+    Segment seg1, seg2;
+    seg1.number = "SU 123";
+    seg1.title = "Москва – Нижний Новгород";
+    seg1.transport_type = "Самолёт";
+    seg1.carrier = "Аэрофлот";
+    seg1.vehicle = "Airbus A320";
+    seg1.from_station = "Шереметьево";
+    seg1.to_station = "Стригино";
+    seg1.departure = "2025-01-15T10:00:00+03:00";
+    seg1.arrival = "2025-01-15T11:30:00+03:00";
+    seg1.duration = 5400;
+
+    seg2.number = "SU 456";
+    seg2.title = "Нижний Новгород – Казань";
+    seg2.transport_type = "Самолёт";
+    seg2.carrier = "Аэрофлот";
+    seg2.vehicle = "Airbus A320";
+    seg2.from_station = "Стригино";
+    seg2.to_station = "Казань";
+    seg2.departure = "2025-01-15T13:30:00+03:00";
+    seg2.arrival = "2025-01-15T15:00:00+03:00";
+    seg2.duration = 5400;
+
+    route.segments = {seg1, seg2};
+    data.routes = {route};
+
+    CinRedirect cin("Москва\nКазань\n2025-01-15\nn\n");
+    CoutSilencer silence;
+
+    EXPECT_CALL(mock_api, GetCityCode("Москва")).WillOnce(Return("c213"));
+    EXPECT_CALL(mock_api, GetCityCode("Казань")).WillOnce(Return("c43"));
+    EXPECT_CALL(mock_cache, Get(_)).WillOnce(Return(data));
+    EXPECT_CALL(mock_api, GetDataFromRequest(_)).Times(0);
+    EXPECT_CALL(mock_cache, Put(_)).Times(0);
+
+    RequestsHandler handler(mock_api, mock_cache);
+    EXPECT_TRUE(handler.HandleRequests());
+}
+
+TEST(HandleRequestsTest, PrintRouteWithInvalidDuration) {
+    MockAPIClient mock_api;
+    MockCache mock_cache;
+
+    Data data;
+    data.from_city = "Москва";
+    data.from_code = "c213";
+    data.to_city = "Казань";
+    data.to_code = "c43";
+    data.date = "2025-01-15";
+    data.total = 1;
+
+    Route route;
+    route.has_transfers = true;
+    route.transfer_city = "Нижний Новгород";
+    route.transfer_duration = -7200;  // отрицательное значение
+    route.departure = "2025-01-15T10:00:00+03:00";
+    route.arrival = "2025-01-15T15:00:00+03:00";
+
+    Segment seg;
+    seg.duration = std::numeric_limits<double>::infinity();
+    route.segments = {seg};
+    data.routes = {route};
+
+    CinRedirect cin("Москва\nКазань\n2025-01-15\nn\n");
+    CoutSilencer silence;
+
+    EXPECT_CALL(mock_api, GetCityCode("Москва")).WillOnce(Return("c213"));
+    EXPECT_CALL(mock_api, GetCityCode("Казань")).WillOnce(Return("c43"));
+    EXPECT_CALL(mock_cache, Get(_)).WillOnce(Return(data));
+
+    RequestsHandler handler(mock_api, mock_cache);
+    EXPECT_TRUE(handler.HandleRequests());
+}
