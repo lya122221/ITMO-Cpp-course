@@ -1,11 +1,7 @@
-#include <iostream>
-#include <string>
-#include "api_client.h"
-#include "model.h"
 #include "requests_handler.h"
 #include "parser.h"
-#include <filesystem>
-#include <fstream>
+#include "api_client.h"
+#include "cache.h"
 
 int main() {
     Parser parser;

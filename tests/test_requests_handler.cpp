@@ -4,6 +4,9 @@
 #include "mock_cache.h"
 #include "requests_handler.h"
 #include <sstream>
+#include <string>
+#include <stdexcept>
+#include <limits>
 
 using ::testing::_;
 using ::testing::Return;

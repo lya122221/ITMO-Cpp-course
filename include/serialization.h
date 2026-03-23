@@ -3,29 +3,30 @@
 using json = nlohmann::json;
 #include "model.h"
 #include "cache.h"
+#include <string>
 
-inline std::string safe_str(const json& j, const std::string& key) {
+inline std::string SafeStr(const json& j, const std::string& key) {
     if (j.contains(key) && j[key].is_string()) {
         return j[key].get<std::string>();
     }
     return "";
 }
 
-inline double safe_double(const json& j, const std::string& key) {
+inline double SafeDouble(const json& j, const std::string& key) {
     if (j.contains(key) && j[key].is_number()) {
         return j[key].get<double>();
     }
     return 0.0;
 }
 
-inline int safe_int(const json& j, const std::string& key) {
+inline int SafeInt(const json& j, const std::string& key) {
     if (j.contains(key) && j[key].is_number()) {
         return j[key].get<int>();
     }
     return 0;
 }
 
-inline bool safe_bool(const json& j, const std::string& key) {
+inline bool SafeBool(const json& j, const std::string& key) {
     if (j.contains(key) && j[key].is_boolean()) {
         return j[key].get<bool>();
     }
@@ -50,37 +51,37 @@ inline void to_json(json& j, const Segment& s) {
 inline void from_json(const json& j, Segment& s) {
     if (j.contains("thread")) {
         const auto& thread = j["thread"];
-        s.transport_type = safe_str(thread, "transport_type");
-        s.number         = safe_str(thread, "number");
-        s.title          = safe_str(thread, "title");
-        s.vehicle        = safe_str(thread, "vehicle");
+        s.transport_type = SafeStr(thread, "transport_type");
+        s.number         = SafeStr(thread, "number");
+        s.title          = SafeStr(thread, "title");
+        s.vehicle        = SafeStr(thread, "vehicle");
 
         if (thread.contains("carrier") && thread["carrier"].is_object()) {
-            s.carrier = safe_str(thread["carrier"], "title");
+            s.carrier = SafeStr(thread["carrier"], "title");
         }
 
         if (j.contains("from") && j["from"].is_object()) {
-            s.from_station = safe_str(j["from"], "title");
+            s.from_station = SafeStr(j["from"], "title");
         }
         if (j.contains("to") && j["to"].is_object()) {
-            s.to_station = safe_str(j["to"], "title");
+            s.to_station = SafeStr(j["to"], "title");
         }
 
-        s.departure = safe_str(j, "departure");
-        s.arrival   = safe_str(j, "arrival");
-        s.duration  = safe_double(j, "duration");
+        s.departure = SafeStr(j, "departure");
+        s.arrival   = SafeStr(j, "arrival");
+        s.duration  = SafeDouble(j, "duration");
 
     } else {
-        s.transport_type = safe_str(j, "transport_type");
-        s.number         = safe_str(j, "number");
-        s.title          = safe_str(j, "title");
-        s.carrier        = safe_str(j, "carrier");
-        s.vehicle        = safe_str(j, "vehicle");
-        s.from_station   = safe_str(j, "from_station");
-        s.to_station     = safe_str(j, "to_station");
-        s.departure      = safe_str(j, "departure");
-        s.arrival        = safe_str(j, "arrival");
-        s.duration       = safe_double(j, "duration");
+        s.transport_type = SafeStr(j, "transport_type");
+        s.number         = SafeStr(j, "number");
+        s.title          = SafeStr(j, "title");
+        s.carrier        = SafeStr(j, "carrier");
+        s.vehicle        = SafeStr(j, "vehicle");
+        s.from_station   = SafeStr(j, "from_station");
+        s.to_station     = SafeStr(j, "to_station");
+        s.departure      = SafeStr(j, "departure");
+        s.arrival        = SafeStr(j, "arrival");
+        s.duration       = SafeDouble(j, "duration");
     }
 }
 
@@ -96,9 +97,9 @@ inline void to_json(json& j, const Route& r) {
 }
 
 inline void from_json(const json& j, Route& r) {
-    r.has_transfers = safe_bool(j, "has_transfers");
-    r.departure     = safe_str(j, "departure");
-    r.arrival       = safe_str(j, "arrival");
+    r.has_transfers = SafeBool(j, "has_transfers");
+    r.departure     = SafeStr(j, "departure");
+    r.arrival       = SafeStr(j, "arrival");
 
     if (j.contains("thread") || j.contains("details")) {
         r.transfer_city     = "";
@@ -110,14 +111,14 @@ inline void from_json(const json& j, Route& r) {
         } else {
             if (j.contains("transfers") && j["transfers"].is_array()) {
                 for (const auto& t : j["transfers"]) {
-                    r.transfer_city = safe_str(t, "title");
+                    r.transfer_city = SafeStr(t, "title");
                 }
             }
 
             if (j.contains("details") && j["details"].is_array()) {
                 for (const auto& detail : j["details"]) {
-                    if (safe_bool(detail, "is_transfer")) {
-                        r.transfer_duration += safe_double(detail, "duration");
+                    if (SafeBool(detail, "is_transfer")) {
+                        r.transfer_duration += SafeDouble(detail, "duration");
                     } else {
                         r.segments.push_back(detail.get<Segment>());
                     }
@@ -126,8 +127,8 @@ inline void from_json(const json& j, Route& r) {
         }
 
     } else {
-        r.transfer_city     = safe_str(j, "transfer_city");
-        r.transfer_duration = safe_double(j, "transfer_duration");
+        r.transfer_city     = SafeStr(j, "transfer_city");
+        r.transfer_duration = SafeDouble(j, "transfer_duration");
 
         if (j.contains("segments") && j["segments"].is_array()) {
             r.segments = j["segments"].get<std::vector<Segment>>();
@@ -153,17 +154,17 @@ inline void from_json(const json& j, Data& d) {
         const auto& search = j["search"];
 
         if (search.contains("from") && search["from"].is_object()) {
-            d.from_city = safe_str(search["from"], "title");
-            d.from_code = safe_str(search["from"], "code");
+            d.from_city = SafeStr(search["from"], "title");
+            d.from_code = SafeStr(search["from"], "code");
         }
         if (search.contains("to") && search["to"].is_object()) {
-            d.to_city = safe_str(search["to"], "title");
-            d.to_code = safe_str(search["to"], "code");
+            d.to_city = SafeStr(search["to"], "title");
+            d.to_code = SafeStr(search["to"], "code");
         }
-        d.date = safe_str(search, "date");
+        d.date = SafeStr(search, "date");
 
         if (j.contains("pagination") && j["pagination"].is_object()) {
-            d.total = safe_int(j["pagination"], "total");
+            d.total = SafeInt(j["pagination"], "total");
         }
 
         if (j.contains("segments") && j["segments"].is_array()) {
@@ -171,12 +172,12 @@ inline void from_json(const json& j, Data& d) {
         }
 
     } else {
-        d.from_city = safe_str(j, "from_city");
-        d.from_code = safe_str(j, "from_code");
-        d.to_city   = safe_str(j, "to_city");
-        d.to_code   = safe_str(j, "to_code");
-        d.date      = safe_str(j, "date");
-        d.total     = safe_int(j, "total");
+        d.from_city = SafeStr(j, "from_city");
+        d.from_code = SafeStr(j, "from_code");
+        d.to_city   = SafeStr(j, "to_city");
+        d.to_code   = SafeStr(j, "to_code");
+        d.date      = SafeStr(j, "date");
+        d.total     = SafeInt(j, "total");
 
         if (j.contains("routes") && j["routes"].is_array()) {
             d.routes = j["routes"].get<std::vector<Route>>();
@@ -193,7 +194,7 @@ inline void to_json(json& j, const CacheEntry& e) {
 }
 
 inline void from_json(const json& j, CacheEntry& e) {
-    e.key       = safe_str(j, "key");
+    e.key       = SafeStr(j, "key");
     e.timestamp = j.contains("timestamp") && j["timestamp"].is_number()
                   ? j["timestamp"].get<int64_t>()
                   : 0;

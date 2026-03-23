@@ -2,6 +2,10 @@
 #include "api_client.h"
 #include "serialization.h"
 #include <fstream>
+#include <filesystem>
+#include <string>
+#include <chrono>
+#include <stdexcept>
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 

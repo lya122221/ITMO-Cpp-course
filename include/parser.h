@@ -6,5 +6,5 @@ class Parser {
 public:
   Config ParseConfig();
 private:
-  std::filesystem::path get_config_dir_(const std::string& app_name);
+  std::filesystem::path GetConfigDir(const std::string& app_name);
 };

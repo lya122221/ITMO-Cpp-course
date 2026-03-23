@@ -34,7 +34,7 @@ private:
     size_t max_cache_size_;
     int64_t ttl_seconds_;
 
-    void load_file_();
-    void save_to_file_();
-    std::string make_key_(const Request& request) const;
+    void LoadFile();
+    void SaveToFile();
+    std::string MakeKey(const Request& request) const;
 };

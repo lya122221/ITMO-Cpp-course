@@ -24,10 +24,8 @@ private:
   std::string cities_path_;
   std::unordered_map<std::string, std::string> cities_;
 
-  std::vector<Route> validate_routes_(const std::vector<Route>& routes);
-
-  void load_cities_file_();
-  std::unordered_map<std::string, std::string> parse_cities_(const json& cities);
-  json get_cities_from_api_();
-  void create_file_for_cities_and_parse_();
+  void LoadCitiesFile();
+  std::unordered_map<std::string, std::string> ParseCities(const json& cities);
+  json GetCitiesFromApi();
+  void CreateFileForCitiesAndParse();
 };

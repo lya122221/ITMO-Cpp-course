@@ -14,9 +14,9 @@ private:
   ICache& cache_;
   Request request_;
 
-  Request get_request_();
-  bool continue_running_or_not_();
-  void print_result_(const Data& data) const;
+  Request GetRequest();
+  bool ContinueRunningOrNot();
+  void PrintResult(const Data& data) const;
 
-  int safe_seconds_for_display_(double seconds) const;
+  int SafeSecondsForDisplay(double seconds) const;
 };

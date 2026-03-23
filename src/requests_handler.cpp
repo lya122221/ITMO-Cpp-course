@@ -1,21 +1,20 @@
 #include "requests_handler.h"
 #include <cmath>
 #include <iostream>
-#include <limits>
 #include <optional>
 
-int RequestsHandler::safe_seconds_for_display_(double seconds) const {
+int RequestsHandler::SafeSecondsForDisplay(double seconds) const {
   if (!std::isfinite(seconds) || seconds < 0.0) {
     return 0;
   }
-  const double kMax = 1e9;
-  if (seconds > kMax) {
-    return static_cast<int>(kMax);
+  const double k_max = 1e9;
+  if (seconds > k_max) {
+    return static_cast<int>(k_max);
   }
   return static_cast<int>(seconds);
 }
 
-Request RequestsHandler::get_request_() {
+Request RequestsHandler::GetRequest() {
   std::string from_city;
   std::cout << "Enter the departure city: ";
   std::cin >> from_city;
@@ -34,7 +33,7 @@ Request RequestsHandler::get_request_() {
   return { from_code, to_code, date };
 }
 
-bool RequestsHandler::continue_running_or_not_() {
+bool RequestsHandler::ContinueRunningOrNot() {
   while (true) {
     std::cout << "Do you want to continue searching for routes? (y/n): ";
     char answer;
@@ -54,7 +53,7 @@ bool RequestsHandler::continue_running_or_not_() {
 bool RequestsHandler::HandleRequests() {
   while (true) {
     try {
-      request_ = get_request_();
+      request_ = GetRequest();
     } catch (const std::exception& e) {
       std::cerr << "Error getting request: " << e.what() << std::endl;
       return false;
@@ -69,18 +68,18 @@ bool RequestsHandler::HandleRequests() {
 
       Data data = data_opt.value();
       cache_.Put(data);
-      print_result_(data);
+      PrintResult(data);
     } else {
-      print_result_(data_opt.value());
+      PrintResult(data_opt.value());
     }
 
-    if (!continue_running_or_not_()) {
+    if (!ContinueRunningOrNot()) {
       return true;
     }
   }
 }
 
-void RequestsHandler::print_result_(const Data& data) const {
+void RequestsHandler::PrintResult(const Data& data) const {
   std::cout << "------------------------------------------------\n";
   std::cout << "Данные предоставлены сервисом Яндекс Расписания\n";
   std::cout << "Источник: http://rasp.yandex.ru/\n";
@@ -106,7 +105,7 @@ void RequestsHandler::print_result_(const Data& data) const {
     std::cout << "  Прибытие:    " << route.arrival << "\n";
 
     if (route.has_transfers) {
-      int td = safe_seconds_for_display_(route.transfer_duration);
+      int td = SafeSecondsForDisplay(route.transfer_duration);
       int hours = td / 3600;
       int mins = (td % 3600) / 60;
       std::cout << "  Пересадка:   " << hours << "ч " << mins << "мин\n";
@@ -138,7 +137,7 @@ void RequestsHandler::print_result_(const Data& data) const {
       std::cout << "    Отправл.:   " << seg.departure << "\n";
       std::cout << "    Прибытие:   " << seg.arrival << "\n";
 
-      int dur = safe_seconds_for_display_(seg.duration);
+      int dur = SafeSecondsForDisplay(seg.duration);
       int hours = dur / 3600;
       int mins = (dur % 3600) / 60;
       std::cout << "    В пути:     " << hours << "ч " << mins << "мин\n";

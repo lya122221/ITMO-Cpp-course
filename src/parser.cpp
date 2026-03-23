@@ -4,8 +4,11 @@
 #include <nlohmann/json.hpp>
 using json = nlohmann::json;
 #include <iostream>
+#include <cstdlib>
+#include <stdexcept>
+#include <cstdlib>
 
-std::filesystem::path Parser::get_config_dir_(const std::string& app_name) {
+std::filesystem::path Parser::GetConfigDir(const std::string& app_name) {
 #ifdef _WIN32
     return std::filesystem::path(std::getenv("APPDATA")) / app_name;
 #elif defined(__APPLE__)
@@ -16,7 +19,7 @@ std::filesystem::path Parser::get_config_dir_(const std::string& app_name) {
 }
 
 Config Parser::ParseConfig() {
-  std::filesystem::path config_dir = get_config_dir_("RoutesFinder");
+  std::filesystem::path config_dir = GetConfigDir("RoutesFinder");
   std::filesystem::path config_path = config_dir / "config.json";
 
   if (!std::filesystem::exists(config_dir)) {

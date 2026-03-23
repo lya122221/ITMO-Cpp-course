@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <fstream>
 #include <thread>
+#include <string>
+#include <chrono>
 
 class CacheTest : public ::testing::Test {
 protected:
