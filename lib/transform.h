@@ -29,7 +29,7 @@ public:
     iterator(in_iter in_it, Predicate pred) : curr_in_(in_it), pred_(pred) {}
 
     value_type operator*() {
-      return (*pred_)(*curr_in_);
+      return pred_(*curr_in_);
     }
 
     iterator& operator++() {
@@ -53,14 +53,14 @@ public:
 
   private:
     in_iter curr_in_;
-    Predicate pred_;
+    Predicate* pred_;
   };
 
   iterator begin() {
-    return iterator(source_.begin(), pred_);
+    return iterator(source_.begin(), &pred_);
   }
   iterator end() {
-    return iterator(source_.end(), pred_);
+    return iterator(source_.end(), &pred_);
   }
 private:
   Source source_;

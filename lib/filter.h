@@ -26,7 +26,9 @@ public:
     using pointer = value_type*;
     using reference = value_type;
   
-    iterator(in_iter in_it, Predicate pred) : curr_in_(in_it), pred_(pred), end_(source_.end()) {}
+    iterator(in_iter in_it, in_iter end_it, Predicate pred) : curr_in_(in_it), pred_(pred), end_(end_it) {
+      skip_();
+    }
 
     value_type operator*() {
       return *curr_in_;
@@ -51,25 +53,24 @@ public:
     bool operator!=(const iterator& other) const {
       return !(*this == other);
     }
+  private:
+    in_iter curr_in_;
+    in_iter end_;
+    Predicate* pred_;
 
-    void skip() {
+    void skip_() {
       while (curr_in_ != end_ && !pred_(*curr_in_)) {
         ++curr_in_;
       }
     }
-  private:
-    in_iter curr_in_;
-    in_iter end_;
-    Predicate pred_;
   };
 
   iterator begin() {
-    auto it = iterator(source_.begin(), pred_);
-    it.skip();
+    auto it = iterator(source_.begin(), source_.end(), &pred_);
     return it;
   }
   iterator end() {
-    return iterator(source_.end(), pred_);
+    return iterator(source_.end(), source_.end(), &pred_);
   }
 private:
   Source source_;
