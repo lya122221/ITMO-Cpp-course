@@ -27,7 +27,7 @@ private:
 };
 
 template <typename Source, typename Stream>
-void operator|(Source source, OutPart<Stream> out_part) {
+Stream& operator|(Source source, OutPart<Stream> out_part) {
   OutAdapter out(source, out_part.stream);
-  out();
+  return out();
 }
