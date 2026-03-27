@@ -8,7 +8,7 @@ struct WritePart {
 
 template <typename Stream, typename Separator>
 WritePart<Stream, Separator> Write(Stream& stream, Separator sep) {
-  return WritePart(stream, sep);
+  return WritePart<Stream, Separator>{stream, sep};
 }
 
 template <typename Source, typename Stream, typename Separator>
@@ -40,7 +40,7 @@ private:
 };
 
 template <typename Source, typename Stream, typename Separator>
-void operator|(Source source, WritePart<Stream, Separator> write_part) {
-  WriteAdapter write(source, write_part.stream, write_part.sep);
-  write();
+Stream& operator|(Source source, WritePart<Stream, Separator> write_part) {
+  WriteAdapter<Source, Stream, Separator>  write(source, write_part.stream, write_part.sep);
+  return write();
 }

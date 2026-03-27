@@ -4,6 +4,8 @@
 template <typename Source>
 class AsDataFlowAdapter {
 public:
+  AsDataFlowAdapter(Source& source) : source_(source) {}
+
   auto begin() {
     return std::begin(source_);
   }
