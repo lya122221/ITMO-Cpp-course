@@ -24,11 +24,8 @@ public:
       return stream_;
     }
 
-    stream_ << *it;
-    it++;
-
     for (; it != end; it++) {
-      stream_ << sep_ << *it;
+      stream_ << *it << sep_;
     }
 
     return stream_;

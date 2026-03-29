@@ -1,8 +1,9 @@
 #include <utility>
+#include <vector>
 
 struct SplitExpectedPart {};
 
-SplitExpectedPart SplitExpected() {
+inline SplitExpectedPart SplitExpected() {
   return SplitExpectedPart{};
 }
 
@@ -26,7 +27,7 @@ public:
     }
 
     value_type operator*() {
-      return curr_->value();
+      return (*curr_).value();
     }
 
     iterator& operator++() {
@@ -54,7 +55,7 @@ public:
     in_iter end_;
 
     void skip_() {
-      while (curr_ != end_ && !curr_->has_value()) {
+      while (curr_ != end_ && !(*curr_).has_value()) {
         ++curr_;
       }
     }
@@ -92,7 +93,7 @@ public:
     }
 
     value_type operator*() {
-      return curr_->error();
+      return (*curr_).error();
     }
 
     iterator& operator++() {
@@ -120,7 +121,7 @@ public:
     in_iter end_;
 
     void skip_() {
-      while (curr_ != end_ && curr_->has_value()) {
+      while (curr_ != end_ && (*curr_).has_value()) {
         ++curr_;
       }
     }
@@ -139,6 +140,9 @@ private:
 };
 
 template <typename Source>
-std::pair<UnexpectedFlow<Source>, ExpectedFlow<Source>> operator|(Source source, SplitExpectedPart split_expected_part) {
-  return {UnexpectedFlow<Source>(source), ExpectedFlow<Source>(source)};
+auto operator|(Source source, SplitExpectedPart) {
+  using value_type = std::decay_t<decltype(*source.begin())>;
+  std::vector<value_type> data(source.begin(), source.end());
+
+  return std::pair{ UnexpectedFlow<std::vector<value_type>>(data), ExpectedFlow<std::vector<value_type>>(data) };
 }
