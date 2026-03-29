@@ -2,7 +2,7 @@
 
 struct DropNulloptPart {};
 
-DropNulloptPart DropNullopt() {
+inline DropNulloptPart DropNullopt() {
   return DropNulloptPart{};
 }
 

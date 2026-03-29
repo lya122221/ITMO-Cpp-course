@@ -5,7 +5,7 @@ struct SplitPart {
   std::string delimiters;
 };
 
-SplitPart Split(std::string delimiters) {
+inline SplitPart Split(std::string delimiters) {
   return SplitPart{delimiters};
 }
 

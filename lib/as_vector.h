@@ -2,7 +2,7 @@
 
 struct AsVectorPart {};
 
-AsVectorPart AsVector() {
+inline AsVectorPart AsVector() {
   return AsVectorPart{};
 }
 
