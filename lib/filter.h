@@ -8,7 +8,7 @@ struct FilterPart {
 
 template <typename Predicate>
 FilterPart<Predicate> Filter(Predicate pred) {
-  return FilterPart<Predicate>(pred);
+  return FilterPart<Predicate>{pred};
 }
 
 template <typename Source, typename Predicate>
@@ -17,16 +17,17 @@ public:
   FilterAdapter(Source src, Predicate pred) : source_(src), pred_(pred) {}
 
   using in_iter = decltype(std::declval<Source>().begin());
+  using in_end_iter = decltype(std::declval<Source>().end());
 
   class iterator {
   public:
     using iterator_category = std::input_iterator_tag;
-    using value_type = decltype(*std::declval<in_iter>());
+    using value_type = std::decay_t<decltype(*std::declval<in_iter>())>;
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
-    using reference = value_type;
-  
-    iterator(in_iter in_it, in_iter end_it, Predicate pred) : curr_in_(in_it), pred_(pred), end_(end_it) {
+    using reference = value_type&;
+    
+    iterator(in_iter in_it, in_end_iter end_it, Predicate pred) : curr_in_(in_it), end_(end_it), pred_(pred) {
       skip_();
     }
 
@@ -55,8 +56,8 @@ public:
     }
   private:
     in_iter curr_in_;
-    in_iter end_;
-    Predicate* pred_;
+    in_end_iter end_;
+    Predicate pred_;
 
     void skip_() {
       while (curr_in_ != end_ && !pred_(*curr_in_)) {
@@ -66,11 +67,10 @@ public:
   };
 
   iterator begin() {
-    auto it = iterator(source_.begin(), source_.end(), &pred_);
-    return it;
+    return iterator(source_.begin(), source_.end(), pred_);
   }
   iterator end() {
-    return iterator(source_.end(), source_.end(), &pred_);
+    return iterator(source_.end(), source_.end(), pred_);
   }
 private:
   Source source_;
