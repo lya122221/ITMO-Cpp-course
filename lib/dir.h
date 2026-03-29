@@ -12,11 +12,18 @@ public:
     using difference_type = std::ptrdiff_t;
     using pointer = value_type*;
     using reference = value_type;
-    
+
     iterator() = default;
 
     iterator(const std::filesystem::path& root, bool recursive) : recursive_(recursive) {
       std::error_code error_code;
+
+      if (!std::filesystem::exists(root, error_code) || error_code || !std::filesystem::is_directory(root, error_code) || error_code || 
+          std::filesystem::directory_iterator(root, error_code) == std::filesystem::directory_iterator()) {
+        curr_dir_ = std::filesystem::recursive_directory_iterator();
+        return;
+      }
+
       curr_dir_ = std::filesystem::recursive_directory_iterator(root, error_code);
 
       if (error_code) {
@@ -27,6 +34,8 @@ public:
       if (!recursive_) {
         curr_dir_.disable_recursion_pending();
       }
+
+      skip_directories_();
     }
 
     value_type operator*() {
@@ -36,11 +45,13 @@ public:
     iterator& operator++() {
       std::error_code error_code;
       curr_dir_.increment(error_code);
-      
+
       if (error_code) {
         curr_dir_ = std::filesystem::recursive_directory_iterator();
+        return *this;
       }
       
+      skip_directories_();
       return *this;
     }
 
@@ -60,6 +71,21 @@ public:
   private:
     std::filesystem::recursive_directory_iterator curr_dir_;
     bool recursive_;
+
+    void skip_directories_() {
+      while (curr_dir_ != std::filesystem::recursive_directory_iterator()) {
+        std::error_code error_code;
+        if (!curr_dir_->is_directory(error_code) && !error_code) {
+          return;
+        }
+
+        curr_dir_.increment(error_code);
+        if (error_code) {
+          curr_dir_ = std::filesystem::recursive_directory_iterator();
+          return;
+        }
+      }
+    }
   };
 
   iterator begin() {
