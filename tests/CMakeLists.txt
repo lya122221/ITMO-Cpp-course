@@ -25,6 +25,11 @@ add_executable(
     split_ut.cpp
     transform_ut.cpp
     write_ut.cpp
+    as_data_flow_ut.cpp
+    as_vector_ut.cpp
+    dir_ut.cpp
+    open_files_ut.cpp
+    out_ut.cpp
 )
 
 target_link_libraries(
