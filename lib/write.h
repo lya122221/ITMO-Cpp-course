@@ -1,0 +1,43 @@
+#include <iostream>
+
+template <typename Stream, typename Separator>
+struct WritePart {
+  Stream& stream;
+  Separator sep;
+};
+
+template <typename Stream, typename Separator>
+WritePart<Stream, Separator> Write(Stream& stream, Separator sep) {
+  return WritePart<Stream, Separator>{stream, sep};
+}
+
+template <typename Source, typename Stream, typename Separator>
+class WriteAdapter {
+public:
+  WriteAdapter(Source source, Stream& stream, Separator sep) : source_(source), stream_(stream), sep_(sep) {}
+
+  Stream& operator()() {
+    auto it = source_.begin();
+    auto end = source_.end();
+
+    if (it == end) {
+      return stream_;
+    }
+
+    for (; it != end; it++) {
+      stream_ << *it << sep_;
+    }
+
+    return stream_;
+  }
+private:
+  Source source_;
+  Stream& stream_;
+  Separator sep_;
+};
+
+template <typename Source, typename Stream, typename Separator>
+Stream& operator|(Source source, WritePart<Stream, Separator> write_part) {
+  WriteAdapter<Source, Stream, Separator>  write(source, write_part.stream, write_part.sep);
+  return write();
+}
