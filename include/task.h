@@ -27,6 +27,14 @@ public:
       result_ = std::make_unique<R>(task_());
     }
   }
+
+  R getResult() {
+    if (!result) {
+      execute();
+    }
+    return *result;
+  }
+
 private:
   std::unique_ptr<R> result_;
   Function<R()> task_;
@@ -50,7 +58,13 @@ public:
 
   template <typename R>
   auto getResultSync() {
+    auto* node = dynamic_cast<TTaskNode<R>*>(task_.get());
 
+    if (!node) {
+      throw std::runtime_error("Wrong type for getResultSync");
+    }
+
+    return node->getResult();
   }
   
   template <typename R>
