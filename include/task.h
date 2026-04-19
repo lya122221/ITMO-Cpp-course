@@ -18,11 +18,14 @@ public:
 };
 
 template <typename R>
-class TTaskNode : ITaskNode {
+class TTaskNode : public ITaskNode {
 public:
-  TTaskNode(Function<R()>&& task) : task_(std::move(func)) {}
+  TTaskNode(Function<R()>&& task) : task_(std::move(task)) {}
 
   void execute() override {
+    if (!result_) {
+      result_ = std::make_unique<R>(task_());
+    }
   }
 private:
   std::unique_ptr<R> result_;
@@ -31,8 +34,7 @@ private:
 
 class TTask {
 public:
-  template <typename R>
-  TTask(Function<R()> task) : task_(std::make_shared<ITaskNode>(TTaskNode<R>(std::move(task)))) {}
+  TTask(std::shared_ptr<ITaskNode> node) : task_(std::move(node)) {}
 
   template <typename R>
   auto getResultSync() {
