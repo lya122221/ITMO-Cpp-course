@@ -32,6 +32,18 @@ private:
   Function<R()> task_;
 };
 
+template <>
+class TTaskNode<void> : public ITaskNode {
+public:
+  TTaskNode(Function<void()>&& task) : task_(std::move(task)) {}
+
+  void execute() override {
+    task_();
+  }
+private:
+  Function<void()> task_;
+};
+
 class TTask {
 public:
   TTask(std::shared_ptr<ITaskNode> node) : task_(std::move(node)) {}
