@@ -1,16 +1,6 @@
 #include "function.h"
 #include <vector>
 
-template <typename R>
-class TFuture {
-public:
-  R get() {
-  
-  }
-private:
-
-};
-
 class ITaskNode {
 public:
   virtual ~ITaskNode() = default;
@@ -28,11 +18,11 @@ public:
     }
   }
 
-  R getResult() {
-    if (!result) {
+  R& getResult() {
+    if (!result_) {
       execute();
     }
-    return *result;
+    return *result_;
   }
 
 private:
@@ -52,12 +42,56 @@ private:
   Function<void()> task_;
 };
 
+template <typename R>
+class TFuture<R&> {
+public:
+  TFuture(std::shared_ptr<ITaskNode> task) : task_(std::move(task)) {}
+
+  R& get() {
+    auto* node = dynamic_cast<TTaskNode<R>*>(task_.get());
+
+    if (!node) {
+      throw std::runtime_error("Wrong type for getResultSync");
+    }
+
+    return node->getResult();
+  }
+
+private:
+  std::shared_ptr<ITaskNode> task_;
+};
+
+template <typename R>
+class TFuture {
+public:
+  TFuture(std::shared_ptr<ITaskNode> task) : task_(std::make_shared<ITaskNode>(std::move(task))) {}
+
+  R get() {
+    if (moved_) {
+      throw std::runtime_error("Result already moved");
+    }
+
+    auto* node = dynamic_cast<TTaskNode<R>*>(task_.get());
+
+    if (!node) {
+      throw std::runtime_error("Wrong type for get in TFuture");
+    }
+
+    moved_ = true;
+    return std::move(node->getResult());
+  }
+
+private:
+  std::shared_ptr<ITaskNode> task_;
+  bool moved_ = false;
+};
+
 class TTask {
 public:
   TTask(std::shared_ptr<ITaskNode> node) : task_(std::move(node)) {}
 
   template <typename R>
-  auto getResultSync() {
+  decltype(auto) getResultSync() {
     auto* node = dynamic_cast<TTaskNode<R>*>(task_.get());
 
     if (!node) {
@@ -69,7 +103,7 @@ public:
   
   template <typename R>
   TFuture<R> getFutureResult() {
-
+    return TFuture(task_);
   }
   TTask apply() {
 
