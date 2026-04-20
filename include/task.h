@@ -38,8 +38,36 @@ public:
   void execute() override {
     task_();
   }
+
+  void getResult() {
+    execute();
+  }
+
 private:
   Function<void()> task_;
+};
+
+template <typename R>
+class TTaskNode<R&> : public ITaskNode {
+public:
+  TTaskNode(Function<R&()>&& task) : task_(std::move(task)) {}
+
+  void execute() override {
+    if (!result_ptr_) {
+      result_ptr_ = &task_(); 
+    }
+  }
+
+  R& getResult() {
+    if (!result_ptr_) {
+      execute();
+    }
+    return *result_ptr_;
+  }
+
+private:
+  R* result_ptr_; 
+  Function<R&()> task_;
 };
 
 template <typename R>
@@ -105,6 +133,7 @@ public:
   TFuture<R> getFutureResult() {
     return TFuture(task_);
   }
+
   TTask apply() {
 
   }
