@@ -2,7 +2,7 @@
 #include <string>
 #include <memory>
 
-#include "function.h" 
+#include "include/function.h" 
 
 int add_five(int x) { return x + 5; }
 
@@ -62,4 +62,18 @@ TEST(FunctionTest, PerfectForwarding) {
   auto ptr = std::make_unique<int>(42);
   auto result = f(std::move(ptr));
   EXPECT_EQ(*result, 42);
+}
+
+TEST(FunctionTest, EmptyCopyAndAssign) {
+  Function<int()> empty1;
+  
+  Function<int()> empty2 = empty1; 
+  EXPECT_THROW(empty2(), std::bad_function_call);
+  
+  Function<int()> empty3;
+  empty3 = empty1;
+  EXPECT_THROW(empty3(), std::bad_function_call);
+  
+  Function<int()> empty4 = std::move(empty1);
+  EXPECT_THROW(empty4(), std::bad_function_call);
 }
