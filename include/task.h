@@ -1,5 +1,11 @@
+#pragma once
 #include "function.h"
 #include <vector>
+#include <type_traits>
+
+class TTaskScheduler;
+template <typename R> 
+class TFuture;
 
 class ITaskNode {
 public:
@@ -71,28 +77,9 @@ private:
 };
 
 template <typename R>
-class TFuture<R&> {
-public:
-  TFuture(std::shared_ptr<ITaskNode> task) : task_(std::move(task)) {}
-
-  R& get() {
-    auto* node = dynamic_cast<TTaskNode<R>*>(task_.get());
-
-    if (!node) {
-      throw std::runtime_error("Wrong type for getResultSync");
-    }
-
-    return node->getResult();
-  }
-
-private:
-  std::shared_ptr<ITaskNode> task_;
-};
-
-template <typename R>
 class TFuture {
 public:
-  TFuture(std::shared_ptr<ITaskNode> task) : task_(std::make_shared<ITaskNode>(std::move(task))) {}
+  TFuture(std::shared_ptr<ITaskNode> task) : task_(std::move(task)) {}
 
   R get() {
     if (moved_) {
@@ -114,9 +101,28 @@ private:
   bool moved_ = false;
 };
 
+template <typename R>
+class TFuture<R&> {
+public:
+  TFuture(std::shared_ptr<ITaskNode> task) : task_(std::move(task)) {}
+
+  R& get() {
+    auto* node = dynamic_cast<TTaskNode<R&>*>(task_.get());
+
+    if (!node) {
+      throw std::runtime_error("Wrong type for getResultSync");
+    }
+
+    return node->getResult();
+  }
+
+private:
+  std::shared_ptr<ITaskNode> task_;
+};
+
 class TTask {
 public:
-  TTask(std::shared_ptr<ITaskNode> node) : task_(std::move(node)) {}
+  TTask(std::shared_ptr<ITaskNode> node, TTaskScheduler* scheduler) : task_(std::move(node)), scheduler_(scheduler) {}
 
   template <typename R>
   decltype(auto) getResultSync() {
@@ -131,12 +137,12 @@ public:
   
   template <typename R>
   TFuture<R> getFutureResult() {
-    return TFuture(task_);
+    return TFuture<R>(task_);
   }
 
-  TTask apply() {
-
-  }
+  template <typename F>
+  TTask apply(F&& f);
 private:
   std::shared_ptr<ITaskNode> task_;
+  TTaskScheduler* scheduler_;
 };
