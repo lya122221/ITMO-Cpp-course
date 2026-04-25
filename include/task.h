@@ -1,6 +1,5 @@
 #pragma once
 #include "function.h"
-#include <vector>
 #include <type_traits>
 
 class TTaskScheduler;
@@ -56,7 +55,7 @@ private:
 template <typename R>
 class TTaskNode<R&> : public ITaskNode {
 public:
-  TTaskNode(Function<R&()>&& task) : task_(std::move(task)) {}
+  TTaskNode(Function<R&()>&& task) : result_ptr_(nullptr), task_(std::move(task)) {}
 
   void execute() override {
     if (!result_ptr_) {
