@@ -48,7 +48,7 @@ public:
 
   R operator()(Args... args) const {
     if (!callable_) {
-      throw std::bad_function_call();
+      throw std::runtime_error("Error operator()");
     }
     return callable_->invoke(std::forward<Args>(args)...);
   }
