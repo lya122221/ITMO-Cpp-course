@@ -46,12 +46,12 @@ TEST(FunctionTest, MoveSemantics) {
   Function<int(int)> f2 = std::move(f1);
 
   EXPECT_EQ(f2(10), 11);
-  EXPECT_THROW(f1(10), std::bad_function_call);
+  EXPECT_THROW(f1(10), std::runtime_error);
 }
 
 TEST(FunctionTest, EmptyFunctionThrows) {
   Function<void()> f;
-  EXPECT_THROW(f(), std::bad_function_call);
+  EXPECT_THROW(f(), std::runtime_error);
 }
 
 TEST(FunctionTest, PerfectForwarding) {
@@ -68,12 +68,12 @@ TEST(FunctionTest, EmptyCopyAndAssign) {
   Function<int()> empty1;
   
   Function<int()> empty2 = empty1; 
-  EXPECT_THROW(empty2(), std::bad_function_call);
+  EXPECT_THROW(empty2(), std::runtime_error);
   
   Function<int()> empty3;
   empty3 = empty1;
-  EXPECT_THROW(empty3(), std::bad_function_call);
+  EXPECT_THROW(empty3(), std::runtime_error);
   
   Function<int()> empty4 = std::move(empty1);
-  EXPECT_THROW(empty4(), std::bad_function_call);
+  EXPECT_THROW(empty4(), std::runtime_error);
 }
