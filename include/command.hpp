@@ -3,6 +3,8 @@
 
 #include "storage.hpp"
 
+namespace kvdb {
+
 using CommandResult = std::variant<
   std::monostate,
   std::string,
@@ -16,3 +18,5 @@ public:
   virtual CommandResult Execute(std::shared_ptr<Storage> storage, std::vector<std::string> args) = 0;
   virtual ~Command() = default;
 };
+
+}
