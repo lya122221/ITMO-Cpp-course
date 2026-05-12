@@ -8,21 +8,33 @@
 
 #include "command.hpp"
 #include "storage.hpp"
+#include "string_command.hpp"
+
+namespace kvdb {
 
 class DataBase {
 public:
-  void ExecuteCommand(const std::string& cmd, std::vector<std::string> args) {
+  DataBase() : storage_(std::make_shared<Storage>(Storage())) {
+    RegisterCommand("SET", std::make_unique<SetCmd>(SetCmd()));
+    RegisterCommand("GET", std::make_unique<GetCmd>(GetCmd()));
+    RegisterCommand("STRLEN", std::make_unique<StrlenCmd>(StrlenCmd()));
+    RegisterCommand("APPEND", std::make_unique<AppendCmd>(AppendCmd()));
+    RegisterCommand("EXPIRE", std::make_unique<ExpireCmd>(ExpireCmd()));
+    RegisterCommand("TTL", std::make_unique<TtlCmd>(TtlCmd()));
+  }
+
+  CommandResult ExecuteCommand(const std::string& cmd, std::vector<std::string> args) {
     auto cmd_it = commands_.find(cmd);
     if (cmd_it == commands_.end()) {
       std::cerr << "(error) Command not found" << std::endl;
-      return;
+      return std::monostate();
     }
 
-    cmd_it->second->Execute(storage_, std::move(args));
+    return cmd_it->second->Execute(storage_, std::move(args));
   }
 
   template <typename... Args>
-  void ExecuteCommand(const std::string& cmd, Args&&... args) {
+  CommandResult ExecuteCommand(const std::string& cmd, Args&&... args) {
     std::string lower_cmd = cmd;
     std::transform(lower_cmd.begin(), lower_cmd.end(), lower_cmd.begin(), [](unsigned char c){ return std::tolower(c); });
 
@@ -36,13 +48,13 @@ public:
         return std::to_string(std::forward<decltype(arg)>(arg));
       } else {
         std::cerr << "(error) Invalid argument type" << std::endl;
-        return "";
+        return "nil";
       }
     };
 
     (args_vec.push_back(to_string_helper(args)), ...);
 
-    ExecuteCommand(lower_cmd, std::move(args_vec));
+    return ExecuteCommand(lower_cmd, std::move(args_vec));
   }
 
   void RegisterCommand(const std::string& name, std::unique_ptr<Command> cmd) {
@@ -54,3 +66,5 @@ private:
   std::shared_ptr<Storage> storage_;
   std::unordered_map<std::string, std::unique_ptr<Command>> commands_;
 };
+
+}
