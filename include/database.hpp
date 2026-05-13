@@ -8,7 +8,9 @@
 
 #include "command.hpp"
 #include "storage.hpp"
-#include "string_command.hpp"
+#include "string_commands.hpp"
+#include "list_commands.hpp"
+#include "general_commands.hpp"
 
 namespace kvdb {
 
@@ -21,6 +23,17 @@ public:
     RegisterCommand("APPEND", std::make_unique<AppendCmd>(AppendCmd()));
     RegisterCommand("EXPIRE", std::make_unique<ExpireCmd>(ExpireCmd()));
     RegisterCommand("TTL", std::make_unique<TtlCmd>(TtlCmd()));
+
+    RegisterCommand("LGET", std::make_unique<LgetCmd>(LgetCmd()));
+    RegisterCommand("LPUSH", std::make_unique<LpushCmd>(LpushCmd()));
+    RegisterCommand("RPUSH", std::make_unique<RpushCmd>(RpushCmd()));
+    RegisterCommand("LPOP", std::make_unique<LpopCmd>(LpopCmd()));
+    RegisterCommand("RPOP", std::make_unique<RpopCmd>(RpopCmd()));
+    RegisterCommand("LLEN", std::make_unique<LlenCmd>(LlenCmd()));
+    RegisterCommand("LRANGE", std::make_unique<LrangeCmd>(LrangeCmd()));
+    RegisterCommand("LINDEX", std::make_unique<LindexCmd>(LindexCmd()));
+    RegisterCommand("LSET", std::make_unique<LsetCmd>(LsetCmd()));
+    RegisterCommand("LINSERT", std::make_unique<LinsertCmd>(LinsertCmd()));
   }
 
   CommandResult ExecuteCommand(const std::string& cmd, std::vector<std::string> args) {
