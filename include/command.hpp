@@ -1,7 +1,9 @@
 #pragma once
 #include <iostream>
+#include <unordered_set>
 
 #include "storage.hpp"
+#include "geo_index.hpp"
 
 namespace kvdb {
 
@@ -10,7 +12,10 @@ using CommandResult = std::variant<
   std::string,
   int,
   std::list<std::string>,
-  std::set<std::string>
+  std::unordered_set<std::string>,
+  bool,
+  std::vector<std::string>,
+  GeoIndex
 >;
 
 class Command {

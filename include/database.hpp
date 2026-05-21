@@ -11,6 +11,8 @@
 #include "string_commands.hpp"
 #include "list_commands.hpp"
 #include "general_commands.hpp"
+#include "set_commands.hpp"
+#include "geo_commands.hpp"
 
 namespace kvdb {
 
@@ -34,6 +36,32 @@ public:
     RegisterCommand("LINDEX", std::make_unique<LindexCmd>(LindexCmd()));
     RegisterCommand("LSET", std::make_unique<LsetCmd>(LsetCmd()));
     RegisterCommand("LINSERT", std::make_unique<LinsertCmd>(LinsertCmd()));
+
+    RegisterCommand("TYPE", std::make_unique<TypeCmd>(TypeCmd()));
+    RegisterCommand("DEL", std::make_unique<DelCmd>(DelCmd()));
+    RegisterCommand("EXISTS", std::make_unique<ExistsCmd>(ExistsCmd()));
+    RegisterCommand("KEYS", std::make_unique<KeysCmd>(KeysCmd()));
+    RegisterCommand("FLUSHDB", std::make_unique<FlushdbCmd>(FlushdbCmd()));
+    RegisterCommand("CONFIG", std::make_unique<ConfigCmd>(ConfigCmd()));
+    RegisterCommand("DBSIZE", std::make_unique<DbSizeCmd>(DbSizeCmd()));
+    RegisterCommand("MEMORY", std::make_unique<MemUsageCmd>(MemUsageCmd()));
+
+    RegisterCommand("SGET", std::make_unique<SgetCmd>(SgetCmd()));
+    RegisterCommand("SADD", std::make_unique<SaddCmd>(SaddCmd()));
+    RegisterCommand("SREM", std::make_unique<SremCmd>(SremCmd()));
+    RegisterCommand("SISMEMBER", std::make_unique<SismemberCmd>(SismemberCmd()));
+    RegisterCommand("SMEMBERS", std::make_unique<SmembersCmd>(SmembersCmd()));
+    RegisterCommand("SCARD", std::make_unique<ScardCmd>(ScardCmd()));
+    RegisterCommand("SUNION", std::make_unique<SunionCmd>(SunionCmd()));
+    RegisterCommand("SINTER", std::make_unique<SinterCmd>(SinterCmd()));
+    RegisterCommand("SDIFF", std::make_unique<SdiffCmd>(SdiffCmd()));
+    RegisterCommand("SMOVE", std::make_unique<SmoveCmd>(SmoveCmd()));
+
+    RegisterCommand("GGET", std::make_unique<GgetCmd>(GgetCmd()));
+    RegisterCommand("GEOADD", std::make_unique<GeoaddCmd>(GeoaddCmd()));
+    RegisterCommand("GEODIST", std::make_unique<GeodistCmd>(GeodistCmd()));
+    RegisterCommand("GEOSEARCH", std::make_unique<GeosearchCmd>(GeosearchCmd()));
+    RegisterCommand("GEOSEARCHSTORE", std::make_unique<GeosearchstoreCmd>(GeosearchstoreCmd()));
   }
 
   CommandResult ExecuteCommand(const std::string& cmd, std::vector<std::string> args) {
