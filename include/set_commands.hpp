@@ -38,18 +38,19 @@ public:
       return std::monostate();
     }
 
+    Storage::Value value;
     std::expected<Storage::Value, std::string> res = storage->Get(args[0]);
     if (!res.has_value()) {
-      std::cerr << res.error() << std::endl;
-      return std::monostate();
+      value = std::unordered_set<std::string>();
+    } else {
+      value = res.value();
     }
 
-    Storage::Value value = res.value();
     if (auto ptr = std::get_if<std::unordered_set<std::string>>(&value)) {
       for (auto it = ++(args.begin()); it != args.end(); it++) {
         ptr->insert(*it);
       }
-      storage->Set(args[0], std::move(*ptr));
+      storage->Set(args[0], *ptr);
       return std::monostate();
     } else {
       std::cerr << "(error) The type associated with this key is not a set" << std::endl;
@@ -120,7 +121,7 @@ public:
 class SmembersCmd : public Command {
 public:
   CommandResult Execute(std::shared_ptr<Storage> storage, std::vector<std::string> args) override {
-    if (args.size() != 2) {
+    if (args.size() != 1) {
       std::cerr << "(error) Invalid arguments count" << std::endl;
       return std::monostate();
     }
@@ -144,7 +145,7 @@ public:
 class ScardCmd : public Command {
 public:
   CommandResult Execute(std::shared_ptr<Storage> storage, std::vector<std::string> args) override {
-    if (args.size() != 2) {
+    if (args.size() != 1) {
       std::cerr << "(error) Invalid arguments count" << std::endl;
       return std::monostate();
     }
@@ -177,8 +178,7 @@ public:
     for (const std::string& key : args) {
       std::expected<Storage::Value, std::string> res = storage->Get(key);
       if (!res.has_value()) {
-        std::cerr << res.error() << std::endl;
-        return std::monostate();
+        continue;
       }
 
       Storage::Value value = res.value();
@@ -190,7 +190,7 @@ public:
       }
     }
 
-    return std::move(union_set);
+    return union_set;
   }
 };
 
@@ -207,20 +207,18 @@ public:
     for (const std::string& key : args) {
       std::expected<Storage::Value, std::string> res = storage->Get(key);
       if (!res.has_value()) {
-        std::cerr << res.error() << std::endl;
-        return std::monostate();
+        return std::unordered_set<std::string>();
       }
 
       Storage::Value value = res.value();
       if (auto ptr = std::get_if<std::unordered_set<std::string>>(&value)) {
         if (first) {
-          inter_set = std::move(*ptr);
+          inter_set = *ptr;
+          first = false;
         } else {
-          for (const auto& el : inter_set) {
-            std::erase_if(inter_set, [&ptr](const std::string& el) {
-              return !ptr->contains(el);
-            });
-          }
+          std::erase_if(inter_set, [&ptr](const std::string& el) {
+            return !ptr->contains(el);
+          });
         }
       } else {
         std::cerr << "(error) The type associated with this key is not a set" << std::endl;
@@ -228,7 +226,7 @@ public:
       }
     }
 
-    return std::move(inter_set);
+    return inter_set;
   }
 };
 
@@ -240,33 +238,41 @@ public:
       return std::monostate();
     }
 
-    std::unordered_set<std::string> inter_set;
+    std::unordered_set<std::string> diff_set;
     bool first = true;
     for (const std::string& key : args) {
       std::expected<Storage::Value, std::string> res = storage->Get(key);
-      if (!res.has_value()) {
-        std::cerr << res.error() << std::endl;
-        return std::monostate();
-      }
-
-      Storage::Value value = res.value();
-      if (auto ptr = std::get_if<std::unordered_set<std::string>>(&value)) {
-        if (first) {
-          inter_set = std::move(*ptr);
+      
+      if (first) {
+        if (!res.has_value()) {
+          return std::unordered_set<std::string>();
+        }
+        Storage::Value value = res.value();
+        if (auto ptr = std::get_if<std::unordered_set<std::string>>(&value)) {
+          diff_set = *ptr;
+          first = false;
         } else {
-          for (const auto& el : inter_set) {
-            std::erase_if(inter_set, [&ptr](const std::string& el) {
-              return ptr->contains(el);
-            });
-          }
+          std::cerr << "(error) The type associated with this key is not a set" << std::endl;
+          return std::monostate();
         }
       } else {
-        std::cerr << "(error) The type associated with this key is not a set" << std::endl;
-        return std::monostate();
+        if (!res.has_value()) {
+          continue;
+        }
+
+        Storage::Value value = res.value();
+        if (auto ptr = std::get_if<std::unordered_set<std::string>>(&value)) {
+          std::erase_if(diff_set, [&ptr](const std::string& el) {
+            return ptr->contains(el);
+          });
+        } else {
+          std::cerr << "(error) The type associated with this key is not a set" << std::endl;
+          return std::monostate();
+        }
       }
     }
 
-    return std::move(inter_set);
+    return diff_set;
   }
 };
 
@@ -284,21 +290,22 @@ public:
       return std::monostate();
     }
 
-    std::expected<Storage::Value, std::string> dest = storage->Get(args[0]);
+    Storage::Value value2;
+    std::expected<Storage::Value, std::string> dest = storage->Get(args[1]);
     if (!dest.has_value()) {
-      std::cerr << dest.error() << std::endl;
-      return std::monostate();
+      value2 = std::unordered_set<std::string>();
+    } else {
+      value2 = dest.value();
     }
 
     Storage::Value value1 = source.value();
-    Storage::Value value2 = dest.value();
     auto ptr1 = std::get_if<std::unordered_set<std::string>>(&value1);
     auto ptr2 = std::get_if<std::unordered_set<std::string>>(&value2);
+    
     if (ptr1 && ptr2) {
       auto elem = args[2];
 
       if (!ptr1->contains(elem)) {
-        std::cerr << "(error) Source set does not contain this element" << std::endl;
         return std::monostate();
       }
 

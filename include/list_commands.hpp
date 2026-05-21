@@ -216,20 +216,27 @@ public:
     if (auto ptr = std::get_if<std::list<std::string>>(&value)) {
       int start = std::stoi(args[1]);
       int end = std::stoi(args[2]);
-      int range = ptr->size();
+      int size = ptr->size();
 
-      while (start < 0) {
-        start += range;
+      if (start < 0) {
+        start += size;
       }
-      while (end < 0) {
-        end += range;
+      if (end < 0) {
+        end += size;
+      }
+      if (start < 0) {
+        start = 0;
+      }
+      if (start > size) {
+        start = size;
+      }
+      if (end < 0) {
+        end = 0;
+      }
+      if (end > size) {
+        end = size;
       }
 
-      if (end > ptr->size()) {
-        end = ptr->size();
-      }
-      start = start % range;
-      end = end % range;
       if (start >= end) {
         return std::list<std::string>();
       }
@@ -305,6 +312,7 @@ public:
 
       auto it = std::next(ptr->begin(), index);
       *it = std::move(args[2]);
+      storage->Set(args[0], *ptr);
 
       return std::monostate();
     } else {
@@ -342,16 +350,18 @@ public:
 
       std::string cmd = args[1];
       std::transform(cmd.begin(), cmd.end(), cmd.begin(), [](unsigned char c){ return std::tolower(c); });
+         
       if (cmd == "before") {
-        it->insert(index, args[3]);
+        ptr->insert(it, args[3]);
       } else if (cmd == "after") {
         it++;
-        it->insert(index, args[3]);
+        ptr->insert(it, args[3]);
       } else {
         std::cerr << "(error) Invalid argument, use BEFORE or AFTER" << std::endl;
         return std::monostate();
       }
 
+      storage->Set(args[0], *ptr);
       return std::monostate();
     } else {
       std::cerr << "(error) The type associated with this key is not a list" << std::endl;

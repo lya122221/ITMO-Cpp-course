@@ -14,6 +14,7 @@ public:
   CommandResult Execute(std::shared_ptr<Storage> storage, std::vector<std::string> args) override {
     if (args.size() != 2) {
       std::cerr << "(error) Invalid arguments count" << std::endl;
+      return std::monostate();
     }
 
     storage->Set(args[0], args[1]);
@@ -152,21 +153,24 @@ public:
 class ConfigCmd : public Command {
 public:
   CommandResult Execute(std::shared_ptr<Storage> storage, std::vector<std::string> args) override {
-    if (args.size() != 2 && args.size() != 3) {
+    if (args.size() < 2) {
       std::cerr << "(error) Invalid arguments count" << std::endl;
       return std::monostate();
     }
 
-    std::string cmd = ToLower(args[1]);
-    if (cmd == "set" && args[2] == "maxmemory") {
+    std::string cmd = ToLower(args[0]);
+    std::string param = ToLower(args[1]);
+
+    if (cmd == "set" && param == "maxmemory") {
       if (args.size() != 3) {
         std::cerr << "(error) Invalid arguments count" << std::endl;
         return std::monostate();
       }
 
-      storage->SetMaxMem(std::stoi(args[2]));
+      storage->SetMaxMem(std::stoull(args[2]));
       return std::monostate();
-    } else if (cmd == "get" && args[2] == "maxmemory") {
+      
+    } else if (cmd == "get" && param == "maxmemory") {
       if (args.size() != 2) {
         std::cerr << "(error) Invalid arguments count" << std::endl;
         return std::monostate();
@@ -174,6 +178,9 @@ public:
 
       return static_cast<int>(storage->GetMaxMem());
     }
+
+    std::cerr << "(error) Unknown CONFIG command" << std::endl;
+    return std::monostate();
   }
 private:
   std::string ToLower(const std::string& cmd) {
